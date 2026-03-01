@@ -1,0 +1,46 @@
+﻿@using RankArena.Models.Entities
+@{
+    ViewData["Title"] = ViewBag.Title ?? "Play";
+    var run = ViewBag.Run as Run;
+}
+
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h3 class="mb-2">@ViewData["Title"]</h3>
+
+            @if (run == null)
+            {
+                <div class="alert alert-danger mb-0">Run bulunamadı.</div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <div><b>RunId:</b> @run.Id</div>
+                    <div><b>Turnuva:</b> @(run.Tournament?.Title ?? "-") (@run.TournamentId)</div>
+                    <div><b>Mode:</b> @run.Mode</div>
+                    <div><b>TotalSlots:</b> @(run.TotalSlots?.ToString() ?? "-")</div>
+                    <div><b>User:</b> @(run.UserId ?? "Guest")</div>
+                    <div><b>SessionKey:</b> @run.SessionKey</div>
+                    <div><b>StartedAt:</b> @run.StartedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")</div>
+                </div>
+
+                <div class="text-muted mb-3">
+                    Bir sonraki adımda burayı gerçek oyun ekranına çevireceğiz:
+                    <ul class="mb-0">
+                        <li>Bracket: eşleşme üret + VS ekranı</li>
+                        <li>Blind: random 5/10 + slot kilitleme</li>
+                        <li>Tier: S/A/B/C/D + GEÇ</li>
+                    </ul>
+                </div>
+
+                <a class="btn btn-outline-primary"
+                   asp-controller="Tournaments"
+                   asp-action="Details"
+                   asp-route-slug="@(run.Tournament?.Slug)">
+                    ← Turnuvaya Geri Dön
+                </a>
+            }
+        </div>
+    </div>
+</div>

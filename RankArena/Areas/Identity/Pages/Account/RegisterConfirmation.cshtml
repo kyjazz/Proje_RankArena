@@ -1,0 +1,60 @@
+﻿@page
+@model RankArena.Areas.Identity.Pages.Account.RegisterConfirmationModel
+@{
+    ViewData["Title"] = "Kayıt Onayı";
+}
+
+<style>
+    .regconfirm-wrapper {
+        min-height: calc(100vh - 160px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 0;
+    }
+
+    .regconfirm-card {
+        width: 100%;
+        max-width: 540px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        padding: 40px 28px;
+        text-align: center;
+    }
+
+    .regconfirm-icon {
+        font-size: 4rem;
+        margin-bottom: 16px;
+    }
+
+    .regconfirm-title {
+        color: #ffb020;
+        font-weight: 900;
+        margin-bottom: 10px;
+    }
+
+    .regconfirm-text {
+        color: rgba(233,236,255,.75);
+        margin-bottom: 24px;
+        line-height: 1.7;
+    }
+
+    .email-highlight {
+        color: #ffb020;
+        font-weight: 700;
+    }
+</style>
+
+<div class="regconfirm-wrapper">
+    <div class="regconfirm-card">
+        <div class="regconfirm-icon">📧</div>
+        <h2 class="regconfirm-title">Kayıt Başarılı!</h2>
+        <p class="regconfirm-text">
+            <span class="email-highlight">@Model.Email</span> adresine bir doğrulama e-postası gönderdik.<br /><br />
+            Lütfen e-postanızı kontrol edin ve doğrulama bağlantısına tıklayın.<br />
+            E-posta gelmezse spam/gereksiz klasörünü de kontrol edin.
+        </p>
+    </div>
+</div>

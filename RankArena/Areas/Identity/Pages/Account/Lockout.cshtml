@@ -1,0 +1,72 @@
+﻿@page
+@model Microsoft.AspNetCore.Identity.UI.V5.Pages.Account.Internal.LockoutModel
+@{
+    ViewData["Title"] = "Hesap Kilitlendi";
+}
+
+<style>
+    .lockout-wrapper {
+        min-height: calc(100vh - 160px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 0;
+    }
+
+    .lockout-card {
+        width: 100%;
+        max-width: 520px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255, 80, 80, 0.3);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        padding: 40px 28px;
+        text-align: center;
+    }
+
+    .lockout-icon {
+        font-size: 4rem;
+        margin-bottom: 16px;
+    }
+
+    .lockout-title {
+        color: #ff4444;
+        font-weight: 900;
+        margin-bottom: 10px;
+    }
+
+    .lockout-text {
+        color: rgba(233,236,255,.75);
+        margin-bottom: 24px;
+        line-height: 1.6;
+    }
+
+    .btn-back {
+        background: #ffb020;
+        color: #070b1a;
+        font-weight: 800;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 28px;
+        text-decoration: none;
+    }
+
+        .btn-back:hover {
+            background: #ffc040;
+            color: #070b1a;
+        }
+</style>
+
+<div class="lockout-wrapper">
+    <div class="lockout-card">
+        <div class="lockout-icon">🔒</div>
+        <h2 class="lockout-title">Hesabınız Geçici Olarak Kilitlendi</h2>
+        <p class="lockout-text">
+            Çok fazla başarısız giriş denemesi yapıldı.<br />
+            Güvenliğiniz için hesabınız <strong>15 dakika</strong> süreyle kilitlenmiştir.<br /><br />
+            Lütfen bir süre bekleyip tekrar deneyin veya
+            <a href="/Identity/Account/ForgotPassword" style="color:#ffb020; font-weight:700;">şifrenizi sıfırlayın</a>.
+        </p>
+        <a href="/" class="btn-back">Ana Sayfaya Dön</a>
+    </div>
+</div>

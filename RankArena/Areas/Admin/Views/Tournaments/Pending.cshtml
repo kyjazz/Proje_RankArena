@@ -1,0 +1,84 @@
+﻿@model List<RankArena.Models.Entities.Tournament>
+@{
+    ViewData["Title"] = "Onay Bekleyen Turnuvalar";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h2 class="mb-1 fw-bold">Onay Bekleyen Turnuvalar</h2>
+        <div class="muted">Admin panelinden yayın akışını yönet.</div>
+    </div>
+
+    <span class="badge badge-soft px-3 py-2">Toplam: @Model.Count</span>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success glass">@TempData["Success"]</div>
+}
+@if (TempData["Info"] != null)
+{
+    <div class="alert alert-info glass">@TempData["Info"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger glass">@TempData["Error"]</div>
+}
+
+<div class="glass p-3">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div class="fs-4 fw-semibold">Şu an onay bekleyen turnuva yok ✅</div>
+            <div class="muted mt-2">Yeni turnuva oluşturulunca burada görünecek.</div>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-darkish table-striped table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:45%;">Başlık</th>
+                        <th>Slug</th>
+                        <th style="width:260px;">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-bold">@t.Title</div>
+                                <div class="muted" style="font-size:12px;">
+                                    Oluşturma: @t.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-dark border">@t.Slug</span>
+                            </td>
+
+                            <td class="d-flex gap-2">
+                                <!-- ✅ DOĞRU ROUTE: Admin Area -->
+                                <form method="post"
+                                      asp-area="Admin"
+                                      asp-controller="Tournaments"
+                                      asp-action="Publish"
+                                      class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@t.Id" />
+                                    <button type="submit" class="btn btn-accent btn-sm px-3">Yayınla</button>
+                                </form>
+
+                                <a class="btn btn-ghost btn-sm px-3" target="_blank" href="/t/@t.Slug">
+                                    Önizle
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

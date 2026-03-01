@@ -1,0 +1,70 @@
+﻿#nullable disable
+
+using System.ComponentModel.DataAnnotations;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.WebUtilities;
+
+namespace RankArena.Areas.Identity.Pages.Account
+{
+    [AllowAnonymous]
+    public class ForgotPasswordModel : PageModel
+    {
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly IEmailSender _emailSender;
+
+        public ForgotPasswordModel(UserManager<IdentityUser> userManager, IEmailSender emailSender)
+        {
+            _userManager = userManager;
+            _emailSender = emailSender;
+        }
+
+        [BindProperty]
+        public InputModel Input { get; set; }
+
+        public class InputModel
+        {
+            [Required(ErrorMessage = "E-posta adresi zorunludur.")]
+            [EmailAddress(ErrorMessage = "Geçerli bir e-posta adresi giriniz.")]
+            [Display(Name = "E-posta")]
+            public string Email { get; set; }
+        }
+
+        public async Task<IActionResult> OnPostAsync()
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByEmailAsync(Input.Email);
+                if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+                {
+                    // Güvenlik: Kullanıcı var mı yok mu belli etme
+                    return RedirectToPage("./ForgotPasswordConfirmation");
+                }
+
+                var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+                var callbackUrl = Url.Page(
+                    "/Account/ResetPassword",
+                    pageHandler: null,
+                    values: new { area = "Identity", code },
+                    protocol: Request.Scheme);
+
+                await _emailSender.SendEmailAsync(
+                    Input.Email,
+                    "Şifre Sıfırlama - RankArena",
+                    $"Şifrenizi sıfırlamak için <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>buraya tıklayın</a>.<br/><br/>Bu bağlantı 3 saat geçerlidir.");
+
+                return RedirectToPage("./ForgotPasswordConfirmation");
+            }
+
+            return Page();
+        }
+    }
+}

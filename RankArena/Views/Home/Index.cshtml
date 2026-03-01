@@ -1,0 +1,201 @@
+﻿@{
+    ViewData["Title"] = "Ana Sayfa";
+    var tournaments = ViewBag.Tournaments as List<RankArena.Models.Entities.Tournament> ?? new();
+    var categories = ViewBag.Categories as List<RankArena.Models.Entities.Category> ?? new();
+}
+
+<style>
+    .hero {
+        background: linear-gradient(135deg, #0b1640 0%, #1a0a3e 50%, #070b1a 100%);
+        border-radius: 20px;
+        padding: 48px 32px;
+        text-align: center;
+        margin-bottom: 32px;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+        .hero h1 {
+            color: #ffb020;
+            font-weight: 900;
+            font-size: 2.4rem;
+        }
+
+        .hero p {
+            color: rgba(233,236,255,0.75);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 12px auto 24px;
+        }
+
+        .hero .btn-start {
+            background: #ffb020;
+            color: #070b1a;
+            font-weight: 700;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 12px;
+            font-size: 1rem;
+        }
+
+            .hero .btn-start:hover {
+                background: #ffc040;
+            }
+
+    .section-title {
+        color: #e9ecff;
+        font-weight: 800;
+        font-size: 1.3rem;
+        margin-bottom: 16px;
+    }
+
+    .cat-pill {
+        display: inline-block;
+        padding: 6px 16px;
+        border-radius: 20px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.10);
+        color: rgba(233,236,255,0.85);
+        text-decoration: none;
+        font-size: 0.85rem;
+        margin: 4px;
+        transition: all .2s;
+    }
+
+        .cat-pill:hover {
+            background: rgba(255,176,32,0.15);
+            border-color: #ffb020;
+            color: #ffb020;
+        }
+
+    .t-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px;
+        padding: 20px;
+        transition: all .25s;
+        text-decoration: none;
+        display: block;
+        color: #e9ecff;
+    }
+
+        .t-card:hover {
+            border-color: rgba(255,176,32,0.4);
+            transform: translateY(-2px);
+            color: #e9ecff;
+        }
+
+        .t-card h5 {
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #ffb020;
+        }
+
+        .t-card .desc {
+            color: rgba(233,236,255,0.6);
+            font-size: 0.85rem;
+        }
+
+        .t-card .meta {
+            color: rgba(233,236,255,0.45);
+            font-size: 0.78rem;
+            margin-top: 10px;
+        }
+
+        .t-card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+
+        .t-card .no-img {
+            width: 100%;
+            height: 140px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #1a0a3e, #0b1640);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+    .search-box {
+        max-width: 400px;
+    }
+
+        .search-box input {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #e9ecff;
+            border-radius: 10px;
+        }
+
+            .search-box input::placeholder {
+                color: rgba(233,236,255,0.4);
+            }
+
+            .search-box input:focus {
+                background: rgba(255,255,255,0.08);
+                border-color: #ffb020;
+                box-shadow: none;
+                color: #e9ecff;
+            }
+</style>
+
+<!-- HERO -->
+<div class="hero">
+    <h1>🏆 RankArena</h1>
+    <p>Yemekler, şarkılar, oyunlar, karakterler... Favori içeriklerini sırala, turnuvalarda yarıştır, tier listeni oluştur!</p>
+    <a href="/Tournaments" class="btn btn-start">Turnuvaları Keşfet →</a>
+</div>
+
+<!-- KATEGORİLER -->
+@if (categories.Any())
+{
+    <div class="mb-4">
+        <div class="section-title">📂 Kategoriler</div>
+        <a href="/Tournaments" class="cat-pill">Tümü</a>
+        @foreach (var c in categories)
+        {
+            <a href="/Tournaments?categoryId=@c.Id" class="cat-pill">@c.Name</a>
+        }
+    </div>
+}
+
+<!-- ARAMA -->
+<div class="mb-4 search-box">
+    <form action="/Tournaments" method="get">
+        <input type="text" name="search" class="form-control" placeholder="🔍 Turnuva ara..." />
+    </form>
+</div>
+
+<!-- SON TURNUVALAR -->
+<div class="section-title">🆕 Son Yayınlanan Turnuvalar</div>
+<div class="row g-3 mb-5">
+    @foreach (var t in tournaments.Take(8))
+    {
+        <div class="col-md-3 col-sm-6">
+            <a href="/t/@t.Slug" class="t-card">
+                @if (!string.IsNullOrWhiteSpace(t.CoverImageUrl))
+                {
+                    <img src="@t.CoverImageUrl" alt="@t.Title" />
+                }
+                else
+                {
+                    <div class="no-img">🎮</div>
+                }
+                <h5>@t.Title</h5>
+                <div class="desc">@(t.Description?.Length > 80 ? t.Description[..80] + "..." : t.Description)</div>
+                <div class="meta">@t.CreatedAt.ToString("dd MMM yyyy")</div>
+            </a>
+        </div>
+    }
+    @if (!tournaments.Any())
+    {
+        <div class="col-12">
+            <p class="text-center" style="color:rgba(233,236,255,0.5);">Henüz yayınlanmış turnuva yok.</p>
+        </div>
+    }
+</div>

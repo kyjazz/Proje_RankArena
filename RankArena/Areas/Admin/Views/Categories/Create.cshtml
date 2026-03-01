@@ -1,0 +1,22 @@
+﻿@{
+    ViewData["Title"] = "Yeni Kategori";
+}
+
+<h2 class="fw-bold mb-3">Yeni Kategori</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="glass p-4" style="max-width:500px;">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div class="mb-3">
+            <label class="form-label">Kategori Adı</label>
+            <input type="text" name="name" class="form-control" required autofocus />
+        </div>
+        <button type="submit" class="btn btn-warning">Kaydet</button>
+        <a href="/Admin/Categories" class="btn btn-outline-secondary ms-2">İptal</a>
+    </form>
+</div>

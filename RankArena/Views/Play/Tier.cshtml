@@ -1,0 +1,1063 @@
+﻿@model RankArena.Models.Entities.TierRunItem
+@using RankArena.Models.Entities
+
+@{
+    ViewData["Title"] = "Tier List";
+
+    var item = Model.TournamentItem;
+
+    var slug = ViewBag.Slug as string;
+
+    int total = ViewBag.Total ?? 0;
+    int done = ViewBag.Done ?? 0;
+    int remaining = ViewBag.Remaining ?? Math.Max(0, total - done);
+    int percent = ViewBag.Percent ?? 0;
+    int skipCount = ViewBag.SkipCount ?? 0;
+
+    var placed = ViewBag.Placed as List<TierSlot> ?? new List<TierSlot>();
+
+    // ✅ Sürükle & Bırak için henüz yerleştirilmemiş tüm item'ler
+    var unplaced = ViewBag.UnplacedPool as List<TierRunItem> ?? new List<TierRunItem>();
+
+    // ✅ Board'daki chip'lerin TierRunItemId'sini bulmak için pool
+    var pool = unplaced.Concat(
+        placed.Select(p => new TierRunItem { })
+    ).ToList();
+
+    string? YtThumb(string? videoId)
+        => string.IsNullOrWhiteSpace(videoId) ? null : $"https://img.youtube.com/vi/{videoId}/hqdefault.jpg";
+
+    string? ItemThumb(TournamentItem? i)
+    {
+        if (!string.IsNullOrWhiteSpace(i?.ImageUrl)) return i!.ImageUrl;
+        if (!string.IsNullOrWhiteSpace(i?.YouTubeVideoId)) return YtThumb(i!.YouTubeVideoId);
+        return null;
+    }
+
+    bool hasVideo = !string.IsNullOrWhiteSpace(item?.YouTubeVideoId);
+    bool hasImage = !string.IsNullOrWhiteSpace(item?.ImageUrl);
+
+    // Board listeleri
+    List<TierSlot> TierOf(Tier t) => placed
+        .Where(x => x.Tier == t)
+        .OrderByDescending(x => x.PlacedAt)
+        .ToList();
+
+    var tiers = new[] { Tier.S, Tier.A, Tier.B, Tier.C, Tier.D };
+
+    string TierClass(Tier t) => t switch
+    {
+        Tier.S => "tierS",
+        Tier.A => "tierA",
+        Tier.B => "tierB",
+        Tier.C => "tierC",
+        Tier.D => "tierD",
+        _ => "tierD"
+    };
+
+    // ✅ YENİ: TournamentItemId → TierRunItemId eşlemesi (board chip'leri için)
+    var allPoolItems = ViewBag.AllPool as List<TierRunItem> ?? new List<TierRunItem>();
+}
+
+<style>
+    html, body {
+        height: 100%;
+    }
+
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #070a18 !important;
+        color: #e9ecff;
+    }
+
+    header, nav, .navbar, footer {
+        display: none !important;
+    }
+
+    .scene {
+        min-height: 100vh;
+        background: radial-gradient(1100px 650px at 20% 10%, rgba(255, 180, 0, .10), transparent 60%), radial-gradient(900px 600px at 85% 30%, rgba(135, 80, 255, .12), transparent 55%), linear-gradient(135deg, #0b1030, #070a18 55%, #060816);
+        padding: 18px 0 28px;
+        position: relative;
+    }
+
+    .exitBtn {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 9999;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.10);
+        color: rgba(233,236,255,0.95);
+        text-decoration: none;
+        font-weight: 900;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+        backdrop-filter: blur(10px);
+        transition: transform .12s ease, filter .12s ease, border-color .12s ease;
+    }
+
+        .exitBtn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.05);
+            border-color: rgba(255,255,255,0.18);
+            color: #fff;
+            text-decoration: none;
+        }
+
+    .glass {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+        border-radius: 18px;
+        overflow: hidden;
+    }
+
+    .topbar {
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .title {
+        margin: 0;
+        font-weight: 1000;
+        letter-spacing: .4px;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .pillRow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        font-size: 12px;
+        color: rgba(233,236,255,.92);
+        white-space: nowrap;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 14px;
+        padding: 14px;
+        align-items: start;
+    }
+
+    .board {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .boardHeader {
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .boardTitle {
+        margin: 0;
+        font-weight: 1000;
+        letter-spacing: .3px;
+        font-size: 14px;
+    }
+
+    .muted {
+        color: rgba(233,236,255,0.70);
+        font-size: 12px;
+    }
+
+    .tierRow {
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        gap: 10px;
+        padding: 10px;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        align-items: stretch;
+        transition: border-color .15s ease;
+    }
+
+        .tierRow.drag-highlight {
+            border-color: rgba(255, 200, 0, 0.30);
+        }
+
+    .tierLabel {
+        border-radius: 14px;
+        font-weight: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        letter-spacing: .8px;
+        font-size: 20px;
+        border: 1px solid rgba(255,255,255,0.14);
+        background: rgba(255,255,255,0.06);
+        user-select: none;
+    }
+
+    .tierZone {
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.03);
+        padding: 8px;
+        min-height: 86px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+
+        .tierZone.drag-over {
+            background: rgba(255, 200, 0, 0.08);
+            border-color: rgba(255, 200, 0, 0.40);
+            box-shadow: inset 0 0 24px rgba(255, 200, 0, 0.06), 0 0 0 2px rgba(255, 200, 0, 0.15);
+        }
+
+    .chip {
+        width: 86px;
+        height: 60px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.04);
+        position: relative;
+        flex: 0 0 auto;
+        cursor: grab;
+        transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease, border-color .12s ease;
+        user-select: none;
+    }
+
+        .chip:hover {
+            border-color: rgba(255, 200, 0, 0.30);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+        }
+
+        .chip:active {
+            cursor: grabbing;
+        }
+
+        .chip img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            opacity: .95;
+            pointer-events: none;
+        }
+
+        .chip::after {
+            content: attr(data-name);
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 6px 6px;
+            font-size: 10px;
+            font-weight: 900;
+            color: rgba(255,255,255,0.92);
+            background: linear-gradient(180deg, transparent, rgba(0,0,0,0.65));
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            pointer-events: none;
+        }
+
+        .chip.dragging {
+            opacity: 0.35;
+            transform: scale(0.90);
+        }
+
+    .playBadge {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        background: rgba(0,0,0,0.55);
+        border: 1px solid rgba(255,255,255,0.16);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: rgba(255,255,255,0.95);
+        backdrop-filter: blur(6px);
+        pointer-events: none;
+    }
+
+    /* Tier renkleri */
+    .tierS .tierLabel {
+        background: rgba(255, 45, 85, 0.18);
+        border-color: rgba(255, 45, 85, 0.35);
+    }
+
+    .tierA .tierLabel {
+        background: rgba(255, 138, 0, 0.18);
+        border-color: rgba(255, 138, 0, 0.35);
+    }
+
+    .tierB .tierLabel {
+        background: rgba(245, 158, 11, 0.16);
+        border-color: rgba(245, 158, 11, 0.32);
+    }
+
+    .tierC .tierLabel {
+        background: rgba(34, 197, 94, 0.16);
+        border-color: rgba(34, 197, 94, 0.32);
+    }
+
+    .tierD .tierLabel {
+        background: rgba(59, 130, 246, 0.16);
+        border-color: rgba(59, 130, 246, 0.32);
+    }
+
+    /* Drag-over tier renkleri */
+    .tierS .tierZone.drag-over {
+        background: rgba(255, 45, 85, 0.10);
+        border-color: rgba(255, 45, 85, 0.50);
+        box-shadow: inset 0 0 24px rgba(255, 45, 85, 0.08), 0 0 0 2px rgba(255, 45, 85, 0.20);
+    }
+
+    .tierA .tierZone.drag-over {
+        background: rgba(255, 138, 0, 0.10);
+        border-color: rgba(255, 138, 0, 0.50);
+        box-shadow: inset 0 0 24px rgba(255, 138, 0, 0.08), 0 0 0 2px rgba(255, 138, 0, 0.20);
+    }
+
+    .tierB .tierZone.drag-over {
+        background: rgba(245, 158, 11, 0.10);
+        border-color: rgba(245, 158, 11, 0.45);
+        box-shadow: inset 0 0 24px rgba(245, 158, 11, 0.08), 0 0 0 2px rgba(245, 158, 11, 0.18);
+    }
+
+    .tierC .tierZone.drag-over {
+        background: rgba(34, 197, 94, 0.10);
+        border-color: rgba(34, 197, 94, 0.45);
+        box-shadow: inset 0 0 24px rgba(34, 197, 94, 0.08), 0 0 0 2px rgba(34, 197, 94, 0.18);
+    }
+
+    .tierD .tierZone.drag-over {
+        background: rgba(59, 130, 246, 0.10);
+        border-color: rgba(59, 130, 246, 0.45);
+        box-shadow: inset 0 0 24px rgba(59, 130, 246, 0.08), 0 0 0 2px rgba(59, 130, 246, 0.18);
+    }
+
+    .side {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px;
+        overflow: hidden;
+        position: sticky;
+        top: 14px;
+    }
+
+    .sideTabs {
+        display: flex;
+        gap: 8px;
+        padding: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .tab {
+        flex: 1 1 auto;
+        text-align: center;
+        padding: 10px 10px;
+        border-radius: 12px;
+        font-weight: 1000;
+        font-size: 12px;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.04);
+        color: rgba(233,236,255,0.92);
+        user-select: none;
+        cursor: pointer;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+        .tab.active {
+            border-color: rgba(255, 200, 0, 0.35);
+            box-shadow: 0 0 0 3px rgba(255, 200, 0, 0.08);
+        }
+
+    .sideBody {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .playerCard {
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.03);
+    }
+
+    .playerTitle {
+        padding: 10px 10px;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        font-weight: 1000;
+        font-size: 13px;
+        color: rgba(233,236,255,0.95);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .quickGrid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        margin-top: 6px;
+    }
+
+    .qbtn {
+        border: none;
+        border-radius: 14px;
+        padding: 12px 10px;
+        font-weight: 1000;
+        color: rgba(255,255,255,0.95);
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.12);
+        transition: transform .12s ease, filter .12s ease, border-color .12s ease;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+
+        .qbtn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.04);
+            border-color: rgba(255,255,255,0.18);
+        }
+
+    .qkey {
+        font-size: 10px;
+        opacity: .75;
+    }
+
+    .qS {
+        background: rgba(255,45,85,0.20);
+        border-color: rgba(255,45,85,0.35);
+    }
+
+    .qA {
+        background: rgba(255,138,0,0.20);
+        border-color: rgba(255,138,0,0.35);
+    }
+
+    .qB {
+        background: rgba(245,158,11,0.18);
+        border-color: rgba(245,158,11,0.32);
+    }
+
+    .qC {
+        background: rgba(34,197,94,0.18);
+        border-color: rgba(34,197,94,0.32);
+    }
+
+    .qD {
+        background: rgba(59,130,246,0.18);
+        border-color: rgba(59,130,246,0.32);
+    }
+
+    .btnRow {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+    }
+
+    .btnGhost {
+        flex: 1 1 auto;
+        border-radius: 14px;
+        padding: 12px 12px;
+        font-weight: 1000;
+        color: rgba(233,236,255,0.95);
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.10);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: transform .12s ease, filter .12s ease, border-color .12s ease;
+    }
+
+        .btnGhost:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.03);
+            border-color: rgba(255,255,255,0.18);
+            color: #fff;
+            text-decoration: none;
+        }
+
+    .undoBtn {
+        width: 100%;
+        border-radius: 14px;
+        padding: 12px 12px;
+        font-weight: 1000;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: rgba(233,236,255,0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: transform .12s ease, filter .12s ease, border-color .12s ease;
+        cursor: pointer;
+    }
+
+        .undoBtn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.03);
+            border-color: rgba(255,255,255,0.18);
+        }
+
+    /* ✅ GEÇ butonu stili */
+    .skipBtn {
+        width: 100%;
+        border-radius: 14px;
+        padding: 12px 12px;
+        font-weight: 1000;
+        background: rgba(255, 165, 0, 0.08);
+        border: 1px solid rgba(255, 165, 0, 0.25);
+        color: rgba(255, 200, 100, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: transform .12s ease, filter .12s ease, border-color .12s ease;
+        cursor: pointer;
+    }
+
+        .skipBtn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.06);
+            border-color: rgba(255, 165, 0, 0.45);
+            background: rgba(255, 165, 0, 0.14);
+        }
+
+    /* Sürükle & Bırak paneli */
+    .dragPool {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 4px;
+    }
+
+        .dragPool::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dragPool::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.12);
+            border-radius: 99px;
+        }
+
+    .dragChip {
+        width: 86px;
+        height: 66px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(255,255,255,0.05);
+        position: relative;
+        flex: 0 0 auto;
+        cursor: grab;
+        transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, opacity .12s ease;
+        user-select: none;
+    }
+
+        .dragChip:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            border-color: rgba(255, 200, 0, 0.35);
+        }
+
+        .dragChip:active {
+            cursor: grabbing;
+        }
+
+        .dragChip img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            opacity: .95;
+            pointer-events: none;
+        }
+
+        .dragChip::after {
+            content: attr(data-name);
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 5px 5px;
+            font-size: 9px;
+            font-weight: 900;
+            color: rgba(255,255,255,0.92);
+            background: linear-gradient(180deg, transparent, rgba(0,0,0,0.70));
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            pointer-events: none;
+        }
+
+        .dragChip .playBadge {
+            pointer-events: none;
+        }
+
+        .dragChip.dragging {
+            opacity: 0.35;
+            transform: scale(0.90);
+        }
+
+    .dragHint {
+        text-align: center;
+        padding: 6px;
+        color: rgba(233,236,255,0.55);
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .dragEmptyMsg {
+        text-align: center;
+        padding: 20px;
+        color: rgba(233,236,255,0.55);
+        font-weight: 900;
+        font-size: 13px;
+    }
+
+    @@media (max-width: 992px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+
+        .side {
+            position: static;
+        }
+
+        .tierRow {
+            grid-template-columns: 76px 1fr;
+        }
+
+        .chip {
+            width: 78px;
+            height: 56px;
+        }
+    }
+</style>
+
+<div class="scene">
+
+    <a class="exitBtn"
+       href="@(string.IsNullOrWhiteSpace(slug) ? Url.Action("Index","Home") : $"/t/{slug}")"
+       title="Turnuvaya geri dön">
+        ← Çıkış
+    </a>
+
+    <div class="container">
+        <div class="glass">
+
+            <div class="topbar">
+                <h2 class="title">🏷️ Tier List</h2>
+                <div class="pillRow">
+                    <span class="pill">RunId: @Model.RunId</span>
+                    <span class="pill">✅ @done / @total</span>
+                    <span class="pill">⏳ Kalan: @remaining</span>
+                    <span class="pill">📈 %@percent</span>
+                    @if (skipCount > 0)
+                    {
+                        <span class="pill">⏭ Geçilen: @skipCount</span>
+                    }
+                </div>
+            </div>
+
+            <div class="layout">
+
+                <!-- SOL: TIER BOARD -->
+                <div class="board">
+                    <div class="boardHeader">
+                        <h3 class="boardTitle m-0">Tier Board</h3>
+                        <span class="muted">Yerleştirilenler burada görünür — sürükleyerek taşıyabilirsiniz</span>
+                    </div>
+
+                    @foreach (var t in tiers)
+                    {
+                        var list = TierOf(t);
+                        <div class="tierRow @TierClass(t)">
+                            <div class="tierLabel">@t</div>
+
+                            <div class="tierZone" data-tier="@t">
+                                @if (list.Count == 0)
+                                {
+                                    <div class="muted tierZoneEmpty" style="padding:10px;">Boş</div>
+                                }
+                                else
+                                {
+                                    @foreach (var row in list)
+                                    {
+                                        var ti = row.TournamentItem;
+                                        var th = ItemThumb(ti);
+                                        var isVid = !string.IsNullOrWhiteSpace(ti?.YouTubeVideoId);
+
+                                        // ✅ Board chip'inin TierRunItemId'sini bul
+                                        var triForChip = allPoolItems.FirstOrDefault(x => x.TournamentItemId == row.TournamentItemId);
+                                        var triId = triForChip?.Id ?? 0;
+
+                                        <div class="chip"
+                                             draggable="true"
+                                             data-tier-run-item-id="@triId"
+                                             data-name="@(ti?.Name ?? "—")"
+                                             title="@(ti?.Name ?? "")">
+                                            @if (!string.IsNullOrWhiteSpace(th))
+                                            {
+                                                <img src="@th" alt="thumb" />
+                                            }
+                                            else
+                                            {
+                                                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-weight:1000;color:rgba(233,236,255,0.75);">
+                                                    ✓
+                                                </div>
+                                            }
+
+                                            @if (isVid)
+                                            {
+                                                <div class="playBadge">▶</div>
+                                            }
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div style="padding:12px 14px; border-top:1px solid rgba(255,255,255,0.06);" class="muted">
+                        Not: Yanlış tier seçersen, item'i sürükleyerek başka tier'e taşıyabilirsin.
+                    </div>
+                </div>
+
+                <!-- SAĞ: SEÇİM PANELİ -->
+                <div class="side">
+                    <div class="sideTabs">
+                        <div class="tab active" id="tabSequential" onclick="switchTab('sequential')">Sırasıyla</div>
+                        <div class="tab" id="tabDragDrop" onclick="switchTab('dragdrop')">Sürükle &amp; Bırak</div>
+                    </div>
+
+                    <!-- ========== SIRASIYLA MODU ========== -->
+                    <div class="sideBody" id="panelSequential">
+                        <div class="playerCard">
+                            @if (hasVideo)
+                            {
+                                <div class="ratio ratio-16x9">
+                                    <iframe src="https://www.youtube.com/embed/@(item!.YouTubeVideoId)"
+                                            allowfullscreen></iframe>
+                                </div>
+                            }
+                            else if (hasImage)
+                            {
+                                <img src="@item!.ImageUrl"
+                                     style="width:100%;height:220px;object-fit:cover;display:block;"
+                                     alt="item" />
+                            }
+                            else
+                            {
+                                <div style="height:220px;display:flex;align-items:center;justify-content:center;color:rgba(233,236,255,0.75);font-weight:1000;">
+                                    Görsel / Video yok
+                                </div>
+                            }
+
+                            <div class="playerTitle">@item?.Name</div>
+                        </div>
+
+                        <div class="muted" style="text-align:center;">
+                            Bu öğeyi yerleştirmek için aşağıdaki katmana tıklayın veya GEÇ ile pas geçin
+                        </div>
+
+                        <div class="quickGrid">
+                            <form asp-action="TierPlace" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="runId" value="@Model.RunId" />
+                                <input type="hidden" name="tierRunItemId" value="@Model.Id" />
+                                <input type="hidden" name="tier" value="@Tier.S" />
+                                <button type="submit" class="qbtn qS" id="btnS"><div>S</div><div class="qkey">1</div></button>
+                            </form>
+                            <form asp-action="TierPlace" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="runId" value="@Model.RunId" />
+                                <input type="hidden" name="tierRunItemId" value="@Model.Id" />
+                                <input type="hidden" name="tier" value="@Tier.A" />
+                                <button type="submit" class="qbtn qA" id="btnA"><div>A</div><div class="qkey">2</div></button>
+                            </form>
+                            <form asp-action="TierPlace" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="runId" value="@Model.RunId" />
+                                <input type="hidden" name="tierRunItemId" value="@Model.Id" />
+                                <input type="hidden" name="tier" value="@Tier.B" />
+                                <button type="submit" class="qbtn qB" id="btnB"><div>B</div><div class="qkey">3</div></button>
+                            </form>
+                            <form asp-action="TierPlace" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="runId" value="@Model.RunId" />
+                                <input type="hidden" name="tierRunItemId" value="@Model.Id" />
+                                <input type="hidden" name="tier" value="@Tier.C" />
+                                <button type="submit" class="qbtn qC" id="btnC"><div>C</div><div class="qkey">4</div></button>
+                            </form>
+                            <form asp-action="TierPlace" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="runId" value="@Model.RunId" />
+                                <input type="hidden" name="tierRunItemId" value="@Model.Id" />
+                                <input type="hidden" name="tier" value="@Tier.D" />
+                                <button type="submit" class="qbtn qD" id="btnD"><div>D</div><div class="qkey">5</div></button>
+                            </form>
+                        </div>
+
+                        <!-- ✅ GEÇ BUTONU -->
+                        <form asp-action="TierSkip" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="runId" value="@Model.RunId" />
+                            <input type="hidden" name="tierRunItemId" value="@Model.Id" />
+                            <button type="submit" class="skipBtn" id="btnSkip">
+                                ⏭ GEÇ (Pas Geç)
+                                <span style="font-size:10px;opacity:.7;margin-left:4px;">[ 0 ]</span>
+                            </button>
+                        </form>
+
+                        <form asp-action="TierUndo" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="runId" value="@Model.RunId" />
+                            <button type="submit" class="undoBtn" title="Son seçimi geri al">
+                                ↩️ Yanlış seçtim (Undo)
+                            </button>
+                        </form>
+
+                        <div class="btnRow">
+                            <a class="btnGhost" asp-controller="Play" asp-action="TierResult" asp-route-runId="@Model.RunId">📄 Listeyi Gör</a>
+                            <a class="btnGhost" href="@(string.IsNullOrWhiteSpace(slug) ? Url.Action("Index","Home") : $"/t/{slug}")">🏠 Turnuva</a>
+                        </div>
+
+                        <div class="muted" style="text-align:center;">
+                            Hızlı yerleştirme: 1-5 tuşları (S/A/B/C/D) · 0 tuşu: GEÇ
+                        </div>
+                    </div>
+
+                    <!-- ========== SÜRÜKLE & BIRAK MODU ========== -->
+                    <div class="sideBody" id="panelDragDrop" style="display:none;">
+                        @if (unplaced.Count == 0)
+                        {
+                            <div class="dragEmptyMsg">🎉 Tüm öğeler yerleştirildi!</div>
+                        }
+                        else
+                        {
+                            <div class="dragHint">📦 Aşağıdaki öğeleri soldaki tier satırlarına sürükleyip bırakın</div>
+                            <div class="dragPool">
+                                @foreach (var p in unplaced)
+                                {
+                                    var ti = p.TournamentItem;
+                                    var th = ItemThumb(ti);
+                                    var isVid = !string.IsNullOrWhiteSpace(ti?.YouTubeVideoId);
+
+                                    <div class="dragChip"
+                                         draggable="true"
+                                         data-tier-run-item-id="@p.Id"
+                                         data-name="@(ti?.Name ?? "—")"
+                                         title="@(ti?.Name ?? "")">
+                                        @if (!string.IsNullOrWhiteSpace(th))
+                                        {
+                                            <img src="@th" alt="thumb" />
+                                        }
+                                        else
+                                        {
+                                            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-weight:1000;color:rgba(233,236,255,0.75);pointer-events:none;">
+                                                @(ti?.Name?.Substring(0, Math.Min(ti.Name.Length, 3)) ?? "?")
+                                            </div>
+                                        }
+                                        @if (isVid)
+                                        {
+                                            <div class="playBadge">▶</div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <form asp-action="TierUndo" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="runId" value="@Model.RunId" />
+                            <button type="submit" class="undoBtn" title="Son seçimi geri al">↩️ Yanlış seçtim (Undo)</button>
+                        </form>
+
+                        <div class="btnRow">
+                            <a class="btnGhost" asp-controller="Play" asp-action="TierResult" asp-route-runId="@Model.RunId">📄 Listeyi Gör</a>
+                            <a class="btnGhost" href="@(string.IsNullOrWhiteSpace(slug) ? Url.Action("Index","Home") : $"/t/{slug}")">🏠 Turnuva</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sürükle & Bırak gizli form -->
+<form id="dragDropForm" asp-action="TierPlace" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="runId" value="@Model.RunId" id="ddRunId" />
+    <input type="hidden" name="tierRunItemId" value="" id="ddTierRunItemId" />
+    <input type="hidden" name="tier" value="" id="ddTier" />
+</form>
+
+<script>
+    // ========================================
+    // TAB GEÇİŞ
+    // ========================================
+    function switchTab(mode) {
+        const seqPanel = document.getElementById("panelSequential");
+        const ddPanel = document.getElementById("panelDragDrop");
+        const tabSeq = document.getElementById("tabSequential");
+        const tabDD = document.getElementById("tabDragDrop");
+
+        if (mode === "sequential") {
+            seqPanel.style.display = "";
+            ddPanel.style.display = "none";
+            tabSeq.classList.add("active");
+            tabDD.classList.remove("active");
+        } else {
+            seqPanel.style.display = "none";
+            ddPanel.style.display = "";
+            tabSeq.classList.remove("active");
+            tabDD.classList.add("active");
+        }
+    }
+
+    // ========================================
+    // KISAYOL TUŞLARI (1-5: tier, 0: GEÇ)
+    // ========================================
+    document.addEventListener("keydown", function (e) {
+        const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+        if (tag === "input" || tag === "textarea") return;
+        const seqPanel = document.getElementById("panelSequential");
+        if (seqPanel.style.display === "none") return;
+
+        if (e.key === "1") document.getElementById("btnS")?.click();
+        if (e.key === "2") document.getElementById("btnA")?.click();
+        if (e.key === "3") document.getElementById("btnB")?.click();
+        if (e.key === "4") document.getElementById("btnC")?.click();
+        if (e.key === "5") document.getElementById("btnD")?.click();
+        if (e.key === "0") document.getElementById("btnSkip")?.click();
+    });
+
+    // ========================================
+    // SÜRÜKLE & BIRAK — Hem panel hem board chip'leri
+    // ========================================
+    (function () {
+        let draggedItemId = null;
+
+        // ✅ Draggable chip'lere event ekle (hem .dragChip hem .chip[draggable])
+        function attachDragStart(el) {
+            el.addEventListener("dragstart", function (e) {
+                draggedItemId = this.getAttribute("data-tier-run-item-id");
+                if (!draggedItemId || draggedItemId === "0") {
+                    e.preventDefault();
+                    return;
+                }
+                e.dataTransfer.setData("text/plain", draggedItemId);
+                e.dataTransfer.effectAllowed = "move";
+                setTimeout(() => this.classList.add("dragging"), 0);
+            });
+
+            el.addEventListener("dragend", function () {
+                this.classList.remove("dragging");
+                draggedItemId = null;
+                // Tüm hover efektlerini kaldır
+                document.querySelectorAll(".tierZone.drag-over").forEach(z => z.classList.remove("drag-over"));
+                document.querySelectorAll(".tierRow.drag-highlight").forEach(r => r.classList.remove("drag-highlight"));
+            });
+        }
+
+        // Panel'deki dragChip'ler
+        document.querySelectorAll(".dragChip").forEach(attachDragStart);
+
+        // ✅ Board'daki chip'ler (zaten yerleştirilmiş, tier'ler arası taşıma)
+        document.querySelectorAll(".chip[draggable='true']").forEach(attachDragStart);
+
+        // ✅ Drop hedefleri: .tierZone
+        document.querySelectorAll(".tierZone").forEach(function (zone) {
+            zone.addEventListener("dragover", function (e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                this.classList.add("drag-over");
+
+                // Üst tierRow'u da vurgula
+                const row = this.closest(".tierRow");
+                if (row) row.classList.add("drag-highlight");
+
+                // "Boş" yazısını gizle
+                const empty = this.querySelector(".tierZoneEmpty");
+                if (empty) empty.style.display = "none";
+            });
+
+            zone.addEventListener("dragleave", function (e) {
+                if (!this.contains(e.relatedTarget)) {
+                    this.classList.remove("drag-over");
+                    const row = this.closest(".tierRow");
+                    if (row) row.classList.remove("drag-highlight");
+
+                    const empty = this.querySelector(".tierZoneEmpty");
+                    const chips = this.querySelectorAll(".chip");
+                    if (empty && chips.length === 0) empty.style.display = "";
+                }
+            });
+
+            zone.addEventListener("drop", function (e) {
+                e.preventDefault();
+                this.classList.remove("drag-over");
+                const row = this.closest(".tierRow");
+                if (row) row.classList.remove("drag-highlight");
+
+                const tierRunItemId = e.dataTransfer.getData("text/plain");
+                if (!tierRunItemId || tierRunItemId === "0") return;
+
+                const tierValue = this.getAttribute("data-tier");
+                if (!tierValue) return;
+
+                // Gizli formu doldur ve submit et
+                document.getElementById("ddTierRunItemId").value = tierRunItemId;
+                document.getElementById("ddTier").value = tierValue;
+                document.getElementById("dragDropForm").submit();
+            });
+        });
+    })();
+</script>

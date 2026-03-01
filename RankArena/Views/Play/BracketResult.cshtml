@@ -1,0 +1,143 @@
+﻿@model RankArena.Models.Entities.Run
+@using RankArena.Models.Entities
+@{
+    ViewData["Title"] = "Bracket Sonuç";
+    var winner = ViewBag.Winner as TournamentItem;
+    var slug = Model.Tournament?.Slug;
+}
+
+<style>
+    .ra-bg {
+        background: radial-gradient(1200px 600px at 30% 10%, rgba(255, 170, 0, 0.08), transparent 55%), radial-gradient(1000px 600px at 80% 30%, rgba(120, 80, 255, 0.08), transparent 55%), linear-gradient(135deg, #0f1530, #0b1024 55%, #0a0f22);
+        border-radius: 18px;
+        padding: 18px;
+        border: 1px solid rgba(255,255,255,0.06);
+        color: #e9ecff;
+    }
+
+    .ra-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    .ra-img {
+        width: 100%;
+        height: 320px;
+        object-fit: cover;
+        display: block;
+        background: rgba(255,255,255,0.03);
+    }
+
+    .ra-title {
+        font-weight: 950;
+        letter-spacing: .4px;
+        margin: 0;
+    }
+
+    .ra-muted {
+        color: rgba(233,236,255,0.75);
+    }
+
+    .ra-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-weight: 900;
+        color: #fff;
+        background: linear-gradient(90deg, #ff2d55, #ff8a00);
+        box-shadow: 0 12px 26px rgba(255,90,0,0.18);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .ra-btn2 {
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-weight: 900;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(255,255,255,0.05);
+        color: #e9ecff;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .ra-frame {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.03);
+    }
+</style>
+
+<div class="container py-5">
+    <div class="ra-bg">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <h2 class="ra-title">🏆 Bracket Sonuç</h2>
+            <div class="ra-muted">RunId: @Model.Id • TurnuvaId: @Model.TournamentId</div>
+        </div>
+
+        @if (winner == null)
+        {
+            <div class="alert alert-warning mb-0">
+                Henüz kazanan belirlenmedi veya veri eksik.
+            </div>
+        }
+        else
+        {
+            <div class="ra-card">
+                @if (!string.IsNullOrWhiteSpace(winner.ImageUrl))
+                {
+                    <img src="@winner.ImageUrl" class="ra-img" />
+                }
+
+                <div class="p-3">
+                    <div class="ra-muted mb-1">ŞAMPİYON</div>
+                    <h3 class="mb-2" style="font-weight:950;">@winner.Name</h3>
+
+                    @if (!string.IsNullOrWhiteSpace(winner.YouTubeVideoId))
+                    {
+                        <div class="ra-frame mt-3">
+                            <div class="ratio ratio-16x9">
+                                <iframe src="https://www.youtube.com/embed/@(winner.YouTubeVideoId)"
+                                        allowfullscreen></iframe>
+                            </div>
+                        </div>
+                        <div class="ra-muted mt-2">Video embed kapalıysa gösterilemeyebilir.</div>
+                    }
+
+                    <div class="d-flex flex-wrap gap-2 mt-4">
+                        @if (!string.IsNullOrWhiteSpace(slug))
+                        {
+                            <a class="ra-btn2"
+                               asp-controller="Tournaments"
+                               asp-action="Details"
+                               asp-route-slug="@slug">
+                                ← Turnuvaya Dön
+                            </a>
+
+                            <a class="ra-btn"
+                               asp-controller="Play"
+                               asp-action="Start"
+                               asp-route-slug="@slug"
+                               asp-route-mode="bracket"
+                               asp-route-value="@(Model.TotalSlots ?? 8)">
+                                🔁 Tekrar Oyna
+                            </a>
+                        }
+                        else
+                        {
+                            <a class="ra-btn2" asp-controller="Tournaments" asp-action="Index">← Turnuvalar</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

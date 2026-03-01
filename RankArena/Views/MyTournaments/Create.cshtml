@@ -1,0 +1,22 @@
+﻿<h2>Turnuva Oluştur</h2>
+
+<form method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="mb-2">
+        <label class="form-label">Başlık</label>
+        <input class="form-control" name="title" />
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label">Açıklama</label>
+        <textarea class="form-control" name="description"></textarea>
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label">Kapak Görsel URL (opsiyon)</label>
+        <input class="form-control" name="coverImageUrl" />
+    </div>
+
+    <button class="btn btn-primary" type="submit">Kaydet (Onay Bekler)</button>
+</form>

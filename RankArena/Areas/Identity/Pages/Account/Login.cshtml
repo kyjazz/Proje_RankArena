@@ -1,0 +1,121 @@
+﻿@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Giriş Yap";
+}
+
+<style>
+    .login-wrapper {
+        min-height: calc(100vh - 160px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 0;
+    }
+
+    .login-card {
+        width: 100%;
+        max-width: 480px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        padding: 28px;
+    }
+
+    .login-title {
+        color: #ffb020;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+
+    .login-subtitle {
+        color: rgba(233,236,255,.75);
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: rgba(233,236,255,.9);
+    }
+
+    .btn-login {
+        background: #ffb020;
+        color: #070b1a;
+        font-weight: 800;
+        border: none;
+        border-radius: 10px;
+        width: 100%;
+        padding: 10px 14px;
+    }
+
+        .btn-login:hover {
+            background: #ffc040;
+        }
+
+    .bottom-link {
+        margin-top: 14px;
+        text-align: center;
+        color: rgba(233,236,255,.75);
+        font-size: .95rem;
+    }
+
+        .bottom-link a {
+            color: #ffb020;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+    .forgot-link a {
+        color: rgba(233,236,255,.6);
+        text-decoration: none;
+        font-size: .9rem;
+    }
+
+        .forgot-link a:hover {
+            color: #ffb020;
+        }
+</style>
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <h2 class="login-title">🏆 RankArena - Giriş Yap</h2>
+        <div class="login-subtitle">Hesabınıza giriş yaparak turnuvalara katılın.</div>
+
+        <form id="account" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-2" role="alert"></div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Email" class="form-label"></label>
+                <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="ornek@email.com" />
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Password" class="form-label"></label>
+                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" placeholder="••••••••" />
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 form-check">
+                <input asp-for="Input.RememberMe" class="form-check-input" />
+                <label asp-for="Input.RememberMe" class="form-check-label">Beni Hatırla</label>
+            </div>
+
+            <button type="submit" class="btn-login">Giriş Yap</button>
+
+            <div class="forgot-link mt-3 text-center">
+                <a asp-page="./ForgotPassword">Şifremi Unuttum</a>
+            </div>
+
+            <div class="bottom-link">
+                Hesabın yok mu?
+                <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Kayıt Ol</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

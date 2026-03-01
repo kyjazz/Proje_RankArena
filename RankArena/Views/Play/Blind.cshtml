@@ -1,0 +1,496 @@
+﻿@model RankArena.Models.Entities.BlindRunItem
+@using RankArena.Models.Entities
+
+@{
+    ViewData["Title"] = "Blind Rank";
+
+    var item = Model.TournamentItem;
+
+    var slots = ViewBag.Slots as List<BlindSlot> ?? new List<BlindSlot>();
+    int total = ViewBag.TotalSlots ?? slots.Count;
+    int done = ViewBag.Completed ?? 0;
+    int remaining = ViewBag.Remaining ?? (total - done);
+    int percent = ViewBag.Percent ?? 0;
+
+    bool hasImage = !string.IsNullOrWhiteSpace(item?.ImageUrl);
+    bool hasVideo = !string.IsNullOrWhiteSpace(item?.YouTubeVideoId);
+    bool showImage = hasImage;
+    bool showVideo = !hasImage && hasVideo;
+
+    // ✅ Turnuvaya dön linki için slug (controller dolduracak)
+    var slug = ViewBag.Slug as string;
+
+    // YouTube kapak helper (slot thumbnails için de kullanacağız)
+    string? YtThumb(string? videoId)
+        => string.IsNullOrWhiteSpace(videoId) ? null : $"https://img.youtube.com/vi/{videoId}/hqdefault.jpg";
+}
+
+<style>
+    /* ✅ Oyun ekranı: tam ekran + navbar/footer kapalı */
+    html, body {
+        height: 100%;
+    }
+
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #070a18 !important;
+    }
+
+    /* ✅ Navbar + Footer’ı bu sayfada tamamen gizle */
+    header, nav, .navbar {
+        display: none !important;
+    }
+
+    footer {
+        display: none !important;
+    }
+
+    .br-scene {
+        min-height: 100vh;
+        background: radial-gradient(1100px 650px at 20% 10%, rgba(255, 180, 0, .10), transparent 60%), radial-gradient(900px 600px at 85% 30%, rgba(135, 80, 255, .12), transparent 55%), linear-gradient(135deg, #0b1030, #070a18 55%, #060816);
+        padding: 24px 0 40px;
+        color: #e9ecff;
+        position: relative;
+    }
+
+    /* ✅ Quizlet tarzı sol üst "çıkış" */
+    .exitBtn {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 9999;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.10);
+        color: rgba(233,236,255,0.95);
+        text-decoration: none;
+        font-weight: 900;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+        backdrop-filter: blur(10px);
+        transition: transform .12s ease, filter .12s ease, border-color .12s ease;
+    }
+
+        .exitBtn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.05);
+            border-color: rgba(255,255,255,0.18);
+            color: #fff;
+            text-decoration: none;
+        }
+
+    .glass {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+        border-radius: 18px;
+        overflow: hidden;
+    }
+
+    .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .title {
+        font-weight: 900;
+        letter-spacing: .4px;
+        margin: 0;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        font-size: 12px;
+        color: rgba(233,236,255,.92);
+        white-space: nowrap;
+    }
+
+    .progressTrack {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.08);
+        margin: 10px 16px 0;
+    }
+
+    .progressFill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #22c55e, #60a5fa);
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        gap: 16px;
+        padding: 16px;
+    }
+
+    /* ✅ Slot alanını sabitle + scroll */
+    .slots {
+        padding: 12px;
+        max-height: calc(100vh - 24px - 40px - 150px);
+        overflow: auto;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+
+        .slots::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .slots::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.10);
+            border-radius: 999px;
+        }
+
+        .slots::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+    .slotBtn {
+        width: 100%;
+        text-align: left;
+        border: none;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px;
+        color: #e9ecff;
+        padding: 10px 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        transition: transform .12s ease, filter .12s ease, border-color .12s ease, box-shadow .12s ease;
+        cursor: pointer;
+        position: relative;
+    }
+
+        .slotBtn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.03);
+            border-color: rgba(255,255,255,0.14);
+        }
+
+        .slotBtn:disabled {
+            opacity: 1;
+            cursor: default;
+            transform: none !important;
+            filter: none !important;
+        }
+
+        /* ✅ TOP3 NEON (Slotlar dolunca) */
+        .slotBtn.top1 {
+            border-color: rgba(255, 215, 0, 0.35) !important;
+            box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.18), 0 0 0 4px rgba(255, 215, 0, 0.07), 0 18px 40px rgba(0,0,0,0.35);
+        }
+
+        .slotBtn.top2 {
+            border-color: rgba(160, 200, 255, 0.35) !important;
+            box-shadow: 0 0 0 1px rgba(160, 200, 255, 0.16), 0 0 0 4px rgba(160, 200, 255, 0.06), 0 18px 40px rgba(0,0,0,0.35);
+        }
+
+        .slotBtn.top3 {
+            border-color: rgba(255, 160, 110, 0.35) !important;
+            box-shadow: 0 0 0 1px rgba(255, 160, 110, 0.16), 0 0 0 4px rgba(255, 160, 110, 0.06), 0 18px 40px rgba(0,0,0,0.35);
+        }
+
+            .slotBtn.top1::after, .slotBtn.top2::after, .slotBtn.top3::after {
+                content: "";
+                position: absolute;
+                inset: -1px;
+                border-radius: 14px;
+                pointer-events: none;
+                background: radial-gradient(600px 120px at 20% 0%, rgba(255,255,255,0.10), transparent 55%);
+                opacity: 0.8;
+                mix-blend-mode: screen;
+            }
+
+    .slotIndex {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.10);
+        flex: 0 0 auto;
+    }
+
+    .slotThumb {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.10);
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(233,236,255,0.7);
+        font-weight: 900;
+    }
+
+        .slotThumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+    .slotText {
+        min-width: 0;
+    }
+
+    .slotName {
+        font-weight: 900;
+        font-size: 13px;
+        line-height: 1.2;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .slotMeta {
+        font-size: 11px;
+        color: rgba(233,236,255,0.65);
+        margin: 2px 0 0;
+    }
+
+    .slotEmpty {
+        opacity: .9;
+    }
+
+    .stage {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    .nameBox {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .itemName {
+        margin: 0;
+        font-weight: 1000;
+        letter-spacing: .3px;
+        font-size: 18px;
+    }
+
+    .hint {
+        color: rgba(233,236,255,0.72);
+        font-size: 12px;
+        margin: 0;
+    }
+
+    .neon {
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.10), 0 0 0 4px rgba(255, 180, 0, 0.08), 0 20px 45px rgba(0,0,0,0.45);
+        border-color: rgba(255, 200, 0, 0.35) !important;
+    }
+
+    .hero {
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.03);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+    }
+
+    .heroImg {
+        width: 100%;
+        height: 420px;
+        object-fit: cover;
+        display: block;
+        background: rgba(255,255,255,0.03);
+    }
+
+    .heroEmpty {
+        height: 420px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(233,236,255,0.7);
+    }
+
+    @@media (max-width: 992px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+
+        .slots {
+            max-height: none;
+            overflow: visible;
+        }
+
+        .heroImg, .heroEmpty {
+            height: 320px;
+        }
+
+        .exitBtn {
+            top: 12px;
+            left: 12px;
+        }
+    }
+</style>
+
+<div class="br-scene">
+
+    <a class="exitBtn"
+       href="@(string.IsNullOrWhiteSpace(slug) ? Url.Action("Index","Home") : $"/t/{slug}")"
+       title="Turnuvaya geri dön">
+        ← Çıkış / Turnuvaya Dön
+    </a>
+
+    <div class="container">
+        <div class="glass">
+
+            <div class="topbar">
+                <h2 class="title">🕶️ Blind Rank</h2>
+
+                <div class="d-flex flex-wrap gap-2 justify-content-end">
+                    <span class="pill">RunId: @Model.RunId</span>
+                    <span class="pill">✅ @done / @total</span>
+                    <span class="pill">⏳ Kalan: @remaining</span>
+                    <span class="pill">📈 %@percent</span>
+                </div>
+            </div>
+
+            <div class="progressTrack">
+                <div class="progressFill" style="width:@percent%"></div>
+            </div>
+
+            <div class="layout">
+
+                <!-- SOL: SLOT LİST -->
+                <div class="slots">
+                    <div class="mb-2" style="font-weight:900; letter-spacing:.3px;">Sıralaman</div>
+
+                    @foreach (var s in slots)
+                    {
+                        var filled = s.TournamentItemId != null;
+                        var si = s.TournamentItem;
+
+                        var thumb = !string.IsNullOrWhiteSpace(si?.ImageUrl)
+                        ? si!.ImageUrl
+                        : YtThumb(si?.YouTubeVideoId);
+
+                        // ✅ Top3 neon class (SADECE doluysa)
+                        var topClass = (filled && s.Position == 1) ? "top1"
+                        : (filled && s.Position == 2) ? "top2"
+                        : (filled && s.Position == 3) ? "top3"
+                        : "";
+
+                        <form asp-action="BlindPlace" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="runId" value="@Model.RunId" />
+                            <input type="hidden" name="blindRunItemId" value="@Model.Id" />
+                            <input type="hidden" name="position" value="@s.Position" />
+
+                            <button type="submit"
+                                    class="slotBtn @(filled ? "" : "slotEmpty") @topClass"
+                            @(filled ? "disabled" : "")
+                                    title="Bu item'ı bu sıraya koy">
+
+                                <div class="slotIndex">@s.Position</div>
+
+                                <div class="slotThumb">
+                                    @if (filled && !string.IsNullOrWhiteSpace(thumb))
+                                    {
+                                        <img src="@thumb" />
+                                    }
+                                    else if (filled)
+                                    {
+                                        <span>✓</span>
+                                    }
+                                    else
+                                    {
+                                        <span>?</span>
+                                    }
+                                </div>
+
+                                <div class="slotText">
+                                    <p class="slotName">
+                                        @(filled ? (si?.Name ?? "Seçildi") : "Boş Slot")
+                                    </p>
+                                    <p class="slotMeta">
+                                        @(filled ? "Kilitledin" : "Tıkla → Yerleştir")
+                                    </p>
+                                </div>
+                            </button>
+                        </form>
+                    }
+                </div>
+
+                <!-- ORTA: O ANKİ ITEM -->
+                <div class="stage">
+                    <div class="nameBox neon">
+                        <div>
+                            <p class="hint m-0">Sıradaki parça</p>
+                            <h3 class="itemName">@item?.Name</h3>
+                        </div>
+                        <div class="hint">Soldan bir slot seç 👉</div>
+                    </div>
+
+                    <div class="hero neon">
+                        @if (showImage)
+                        {
+                            <img src="@item!.ImageUrl" class="heroImg" />
+                        }
+                        else if (showVideo)
+                        {
+                            <div class="ratio ratio-16x9">
+                                <iframe src="https://www.youtube.com/embed/@(item!.YouTubeVideoId)"
+                                        allowfullscreen></iframe>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="heroEmpty">Görsel / Video yok</div>
+                        }
+                    </div>
+
+                    <div class="hint">
+                        İpucu: Blind mantığı gereği, item’ları “bilmeden” doğru sıraya koyuyorsun. Bitince sonuç ekranında listeyi göreceksin.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

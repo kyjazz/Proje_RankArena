@@ -1,0 +1,53 @@
+﻿@model List<RankArena.Models.Entities.Category>
+@{
+    ViewData["Title"] = "Kategoriler";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="fw-bold mb-0">Kategoriler</h2>
+    <a class="btn btn-sm navbtn" href="/Admin/Categories/Create">+ Yeni Kategori</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="glass p-3">
+    <table class="table table-darkish mb-0">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Kategori Adı</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td>@c.Id</td>
+                    <td>@c.Name</td>
+                    <td class="text-end">
+                        <form asp-action="Delete" method="post" style="display:inline">
+                            <input type="hidden" name="id" value="@c.Id" />
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Bu kategoriyi silmek istediğinize emin misiniz?')">
+                                Sil
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr><td colspan="3" class="text-center muted">Henüz kategori yok.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>

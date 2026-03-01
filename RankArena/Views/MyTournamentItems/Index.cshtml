@@ -1,0 +1,166 @@
+﻿@model List<RankArena.Models.Entities.TournamentItem>
+@{
+    var t = ViewBag.Tournament as RankArena.Models.Entities.Tournament;
+}
+
+<h2>Turnuva Item Yönetimi</h2>
+
+@if (t != null)
+{
+    <div class="mb-3">
+        <h4>@t.Title</h4>
+        <div>
+            Durum:
+            @if (t.IsPublished)
+            {
+                <span class="badge bg-success">Yayınlı</span>
+            }
+            else
+            {
+                <span class="badge bg-warning text-dark">Onay Bekliyor</span>
+            }
+        </div>
+        <div class="text-muted">Slug: @t.Slug</div>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+@if (t != null && t.IsPublished)
+{
+    <div class="alert alert-info">
+        Bu turnuva yayınlı. Güvenlik için item ekleme/silme/değiştirme kapalı.
+    </div>
+}
+
+<div class="card mb-4">
+    <div class="card-header">Yeni Item Ekle</div>
+    <div class="card-body">
+        <form method="post" asp-action="Add">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="tournamentId" value="@t?.Id" />
+
+            <div class="mb-2">
+                <label class="form-label">Ad</label>
+                <input class="form-control" name="name" @(t != null && t.IsPublished ? "disabled" : "") />
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label">Görsel URL (opsiyon)</label>
+                <input class="form-control" name="imageUrl" @(t != null && t.IsPublished ? "disabled" : "") />
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label">YouTube Video (opsiyon)</label>
+                <input class="form-control" name="youTubeVideoId" placeholder="örn: dQw4w9WgXcQ veya YouTube linki"
+                @(t != null && t.IsPublished ? "disabled" : "") />
+                <div class="form-text">
+                    Video ID veya link yapıştırabilirsin. Sistem otomatik olarak ID’ye çevirir.
+                    Örn: https://www.youtube.com/watch?v=<b>dQw4w9WgXcQ</b>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" type="submit" @(t != null && t.IsPublished ? "disabled" : "")>
+                Ekle
+            </button>
+        </form>
+    </div>
+</div>
+
+<h4>Mevcut Item'lar (@Model.Count)</h4>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Ad</th>
+            <th>Aktif</th>
+            <th>YouTube</th>
+            <th>Görsel</th>
+            <th style="width:240px;">İşlem</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Name</td>
+
+                <td>
+                    @if (item.IsActive)
+                    {
+                        <span class="badge bg-success">Aktif</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Pasif</span>
+                    }
+                </td>
+
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(item.YouTubeVideoId))
+                    {
+                        <a target="_blank" href="https://www.youtube.com/watch?v=@item.YouTubeVideoId">
+                            @item.YouTubeVideoId
+                        </a>
+
+                        <div class="mt-2" style="max-width: 320px;">
+                            <iframe width="320" height="180"
+                                    src="https://www.youtube.com/embed/@item.YouTubeVideoId"
+                                    title="YouTube video"
+                                    frameborder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </td>
+
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                    {
+                        <a href="@item.ImageUrl" target="_blank">Aç</a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </td>
+
+                <td>
+                    <form method="post" asp-action="Toggle" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <input type="hidden" name="tournamentId" value="@t?.Id" />
+                        <button class="btn btn-sm btn-warning" type="submit"
+                        @(t != null && t.IsPublished ? "disabled" : "")>
+                            Aktif/Pasif
+                        </button>
+                    </form>
+
+                    <form method="post" asp-action="Delete" class="d-inline"
+                          onsubmit="return confirm('Silinsin mi?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <input type="hidden" name="tournamentId" value="@t?.Id" />
+                        <button class="btn btn-sm btn-danger" type="submit"
+                        @(t != null && t.IsPublished ? "disabled" : "")>
+                            Sil
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

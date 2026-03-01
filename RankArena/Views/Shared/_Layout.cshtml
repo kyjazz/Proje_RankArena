@@ -1,0 +1,287 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - RankArena</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/RankArena.styles.css" asp-append-version="true" />
+    <style>
+        :root {
+            --bg1: #070b1a;
+            --bg2: #0b1640;
+            --text: #e9ecff;
+            --muted: rgba(233,236,255,.65);
+            --accent: #ffb020;
+        }
+
+        body {
+            background: linear-gradient(180deg, var(--bg1), var(--bg2));
+            color: var(--text);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        a {
+            color: var(--accent);
+        }
+
+            a:hover {
+                color: #ffc040;
+            }
+
+        /* ========== NAVBAR ========== */
+        .topnav {
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+            .topnav .container {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding-top: 10px;
+                padding-bottom: 10px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+        .brand {
+            color: var(--accent);
+            font-weight: 900;
+            font-size: 1.3rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .brand:hover {
+                color: #ffc040;
+                text-decoration: none;
+            }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .navlink {
+            color: var(--muted);
+            text-decoration: none;
+            padding: 7px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all .15s ease;
+            white-space: nowrap;
+        }
+
+            .navlink:hover {
+                color: var(--text);
+                background: rgba(255,255,255,0.06);
+                text-decoration: none;
+            }
+
+            .navlink.active-link {
+                color: var(--accent);
+                background: rgba(255,176,32,0.08);
+            }
+
+        .btn-nav {
+            background: var(--accent);
+            color: #070b1a;
+            font-weight: 700;
+            border: none;
+            padding: 7px 18px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all .15s ease;
+            white-space: nowrap;
+        }
+
+            .btn-nav:hover {
+                background: #ffc040;
+                color: #070b1a;
+                text-decoration: none;
+            }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--muted);
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .15s ease;
+        }
+
+            .btn-logout:hover {
+                border-color: rgba(255,255,255,0.30);
+                color: var(--text);
+                background: rgba(255,255,255,0.04);
+            }
+
+        .user-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.78rem;
+            color: rgba(233,236,255,0.8);
+            white-space: nowrap;
+        }
+
+        /* ========== FOOTER ========== */
+        .site-footer {
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding: 20px 0;
+            margin-top: 40px;
+            text-align: center;
+            color: rgba(233,236,255,0.35);
+            font-size: 0.8rem;
+        }
+
+            .site-footer a {
+                color: rgba(233,236,255,0.5);
+            }
+
+                .site-footer a:hover {
+                    color: var(--accent);
+                }
+
+        /* ========== GENEL ========== */
+        .form-control, .form-select {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: var(--text);
+            border-radius: 10px;
+        }
+
+            .form-control:focus, .form-select:focus {
+                background: rgba(255,255,255,0.08);
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px rgba(255,176,32,0.10);
+                color: var(--text);
+            }
+
+            .form-control::placeholder {
+                color: rgba(233,236,255,0.4);
+            }
+
+            .form-select option {
+                background: #0b1640;
+                color: var(--text);
+            }
+
+        .btn-warning {
+            background: var(--accent);
+            color: #070b1a;
+            font-weight: 700;
+            border: none;
+        }
+
+            .btn-warning:hover {
+                background: #ffc040;
+                color: #070b1a;
+            }
+
+        .alert-success {
+            background: rgba(34,197,94,0.12);
+            border-color: rgba(34,197,94,0.25);
+            color: #86efac;
+        }
+
+        .alert-danger {
+            background: rgba(255,45,85,0.12);
+            border-color: rgba(255,45,85,0.25);
+            color: #fca5a5;
+        }
+
+        .table {
+            color: var(--text);
+        }
+
+            .table thead th {
+                border-bottom-color: rgba(255,255,255,0.08);
+                color: var(--muted);
+                font-weight: 700;
+                font-size: 0.82rem;
+            }
+
+            .table td {
+                border-bottom-color: rgba(255,255,255,0.05);
+            }
+    </style>
+</head>
+<body>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="topnav">
+        <div class="container">
+            <a class="brand" href="/">🏆 RankArena</a>
+
+            <div class="nav-links">
+                <a class="navlink" href="/">Ana Sayfa</a>
+                <a class="navlink" href="/Tournaments">Turnuvalar</a>
+
+                @if (User?.Identity?.IsAuthenticated == true)
+                {
+                    <a class="navlink" href="/MyTournaments">Turnuvalarım</a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a class="navlink" href="/Admin/Tournaments/Pending">⚙️ Admin</a>
+                        <a class="navlink" href="/Admin/Categories">📂 Kategoriler</a>
+                    }
+
+                    <span class="user-badge">👤 @User.Identity.Name</span>
+
+                    <form asp-area="Identity" asp-page="/Account/Logout" method="post" style="display:inline;margin:0;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-logout">Çıkış</button>
+                    </form>
+                }
+                else
+                {
+                    <a class="btn-nav" href="/Identity/Account/Login">Giriş Yap</a>
+                    <a class="navlink" href="/Identity/Account/Register">Kayıt Ol</a>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <!-- ========== İÇERİK ========== -->
+    <div class="container" style="padding-top:24px; padding-bottom:24px;">
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="site-footer">
+        <div class="container">
+            &copy; 2026 — <strong>RankArena</strong> · Tercih Turnuvası &amp; Sıralama Platformu
+            · <a asp-area="" asp-controller="Home" asp-action="Privacy">Gizlilik</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

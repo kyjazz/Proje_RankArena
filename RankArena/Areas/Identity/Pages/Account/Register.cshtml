@@ -1,0 +1,135 @@
+﻿@page
+@model RankArena.Areas.Identity.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Kayıt Ol";
+}
+
+<style>
+    .register-wrapper {
+        min-height: calc(100vh - 160px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 0;
+    }
+
+    .register-card {
+        width: 100%;
+        max-width: 540px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        padding: 28px;
+    }
+
+    .register-title {
+        color: #ffb020;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+
+    .register-subtitle {
+        color: rgba(233,236,255,.75);
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: rgba(233,236,255,.9);
+    }
+
+    .btn-register {
+        background: #ffb020;
+        color: #070b1a;
+        font-weight: 800;
+        border: none;
+        border-radius: 10px;
+        width: 100%;
+        padding: 10px 14px;
+    }
+
+        .btn-register:hover {
+            background: #ffc040;
+        }
+
+    .password-rules {
+        margin-top: 10px;
+        font-size: .88rem;
+        color: rgba(233,236,255,.75);
+        background: rgba(255,255,255,0.03);
+        border: 1px dashed rgba(255,255,255,0.18);
+        border-radius: 10px;
+        padding: 10px 12px;
+    }
+
+    .bottom-link {
+        margin-top: 14px;
+        text-align: center;
+        color: rgba(233,236,255,.75);
+        font-size: .95rem;
+    }
+
+        .bottom-link a {
+            color: #ffb020;
+            font-weight: 700;
+            text-decoration: none;
+        }
+</style>
+
+<div class="register-wrapper">
+    <div class="register-card">
+        <h2 class="register-title">🏆 RankArena - Kayıt Ol</h2>
+        <div class="register-subtitle">Hemen katıl, turnuvaları keşfet ve kendi sıralamanı oluştur.</div>
+
+        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-2" role="alert"></div>
+
+            <div class="mb-3">
+                <label asp-for="Input.UserName" class="form-label"></label>
+                <input asp-for="Input.UserName" class="form-control" autocomplete="username" />
+                <span asp-validation-for="Input.UserName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Email" class="form-label"></label>
+                <input asp-for="Input.Email" class="form-control" autocomplete="email" />
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Password" class="form-label"></label>
+                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" />
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+
+                <div class="password-rules">
+                    Şifre kuralları:
+                    <ul class="mb-0 mt-1">
+                        <li>En az 6 karakter</li>
+                        <li>En az 1 büyük harf</li>
+                        <li>En az 1 küçük harf</li>
+                        <li>En az 1 rakam</li>
+                        <li>En az 1 özel karakter</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Input.ConfirmPassword" class="form-label"></label>
+                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" />
+                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <button id="registerSubmit" type="submit" class="btn-register">Kayıt Ol</button>
+
+            <div class="bottom-link">
+                Zaten hesabın var mı?
+                <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Giriş Yap</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,212 @@
+﻿@model RankArena.Models.Entities.Tournament
+@{
+    ViewData["Title"] = "Turnuva Düzenle";
+}
+
+<style>
+    .edit-panel {
+        background: rgba(16, 19, 30, 0.75);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    }
+
+    .edit-input {
+        background: rgba(10, 12, 20, 0.85);
+        color: #e9ecff;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+        .edit-input:focus {
+            background: rgba(10, 12, 20, 0.95);
+            color: #fff;
+            border-color: #5d7cff;
+            box-shadow: 0 0 0 0.15rem rgba(93,124,255,0.25);
+        }
+
+    .edit-table thead th {
+        background: rgba(20, 23, 35, 0.9);
+        color: #e9ecff;
+        border-color: rgba(255,255,255,0.06);
+    }
+
+    .edit-table td {
+        border-color: rgba(255,255,255,0.06);
+        color: #e9ecff;
+    }
+
+    .edit-muted {
+        color: rgba(233,236,255,0.55);
+    }
+</style>
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h2 class="mb-1">Turnuva Düzenle</h2>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary"
+           asp-controller="Tournaments"
+           asp-action="Details"
+           asp-route-slug="@Model.Slug"
+           target="_blank">
+            Önizleme
+        </a>
+    </div>
+</div>
+
+@if (Model.IsPublished)
+{
+    <div class="alert alert-success d-flex flex-column">
+        <div>✅ Turnuva şu an <strong>YAYINDA</strong>.</div>
+        <small>Her değişiklik sonrası otomatik olarak yayından kalkar.</small>
+        <small class="text-muted mt-1">Son güncelleme: @Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning d-flex flex-column">
+        <div>⏳ Turnuva şu an <strong>ONAY BEKLİYOR</strong>.</div>
+        <small>Admin onayı sonrası tekrar yayınlanır.</small>
+        <small class="text-muted mt-1">Son güncelleme: @Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
+    </div>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="edit-panel p-3 mb-4">
+    <h4 class="text-light">Turnuva Bilgileri</h4>
+    <form method="post" asp-action="Edit" asp-controller="MyTournaments">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+
+        <div class="mb-2">
+            <label class="form-label edit-muted">Başlık</label>
+            <input class="form-control edit-input" name="title" value="@Model.Title" />
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label edit-muted">Açıklama</label>
+            <textarea class="form-control edit-input" name="description">@Model.Description</textarea>
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label edit-muted">Kapak Görsel URL</label>
+            <input class="form-control edit-input" name="coverImageUrl" value="@Model.CoverImageUrl" />
+        </div>
+
+        <button class="btn btn-primary" type="submit">Kaydet (Yeniden Onaya Gider)</button>
+    </form>
+</div>
+
+<div class="edit-panel p-3 mb-4">
+    <h4 class="text-light">Item Ekle</h4>
+    <form method="post" asp-action="AddItem" asp-controller="MyTournaments">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="tournamentId" value="@Model.Id" />
+
+        <div class="mb-2">
+            <label class="form-label edit-muted">Item Adı</label>
+            <input class="form-control edit-input" name="name" />
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label edit-muted">Görsel URL (opsiyon)</label>
+            <input class="form-control edit-input" name="imageUrl" />
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label edit-muted">YouTube Video Id (opsiyon)</label>
+            <input class="form-control edit-input" name="youTubeVideoId" />
+        </div>
+
+        <button class="btn btn-success" type="submit">Item Ekle</button>
+    </form>
+</div>
+
+<div class="edit-panel p-3">
+    <h4 class="text-light">Mevcut Itemlar</h4>
+
+    @if (!Model.Items.Any())
+    {
+        <p class="edit-muted">Henüz item yok.</p>
+    }
+    else
+    {
+        <table class="table edit-table align-middle">
+            <thead>
+                <tr>
+                    <th>Önizleme</th>
+                    <th>Ad</th>
+                    <th>Görsel</th>
+                    <th>YouTube</th>
+                    <th style="width:200px;">İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    var previewUrl = string.IsNullOrWhiteSpace(item.ImageUrl)
+                    ? (!string.IsNullOrWhiteSpace(item.YouTubeVideoId)
+                    ? $"https://img.youtube.com/vi/{item.YouTubeVideoId}/hqdefault.jpg"
+                    : null)
+                    : item.ImageUrl;
+
+                    var updateFormId = $"update-{item.Id}";
+                    var removeFormId = $"remove-{item.Id}";
+
+                    <tr>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(previewUrl))
+                            {
+                                <img src="@previewUrl" alt="preview" style="width:60px;height:60px;object-fit:cover;border-radius:8px;" />
+                            }
+                            else
+                            {
+                                <span class="edit-muted">Yok</span>
+                            }
+                        </td>
+
+                        <td>
+                            <input class="form-control edit-input" name="name" value="@item.Name" form="@updateFormId" />
+                        </td>
+
+                        <td>
+                            <input class="form-control edit-input" name="imageUrl" value="@item.ImageUrl" form="@updateFormId" />
+                        </td>
+
+                        <td>
+                            <input class="form-control edit-input" name="youTubeVideoId" value="@item.YouTubeVideoId" form="@updateFormId" />
+                        </td>
+
+                        <td class="d-flex gap-2">
+                            <button class="btn btn-primary" type="submit" form="@updateFormId">Güncelle</button>
+                            <button class="btn btn-danger" type="submit" form="@removeFormId"
+                                    onclick="return confirm('Bu item silinecek. Emin misin?');">
+                                Sil
+                            </button>
+                        </td>
+                    </tr>
+
+                    <form id="@updateFormId" method="post" asp-action="UpdateItem" asp-controller="MyTournaments">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="itemId" value="@item.Id" />
+                    </form>
+
+                    <form id="@removeFormId" method="post" asp-action="RemoveItem" asp-controller="MyTournaments">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="itemId" value="@item.Id" />
+                    </form>
+                }
+            </tbody>
+        </table>
+    }
+</div>

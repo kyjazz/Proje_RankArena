@@ -1,0 +1,331 @@
+﻿@model RankArena.Models.Entities.BracketMatch
+@{
+    ViewData["Title"] = $"Round {Model.Round} - Match {Model.MatchNumber}";
+
+    var left = Model.LeftItem;
+    var right = Model.RightItem;
+
+    int? totalThisRound = ViewBag.TotalThisRound as int?;
+    int? remainingThisRound = ViewBag.RemainingThisRound as int?;
+
+    var roundName = ViewBag.RoundName as string;
+
+    int totalMatches = ViewBag.TotalMatches ?? 0;
+    int completedMatches = ViewBag.CompletedMatches ?? 0;
+    int remainingMatches = ViewBag.RemainingMatches ?? 0;
+    int progressPercent = ViewBag.ProgressPercent ?? 0;
+}
+
+@functions {
+    private static bool HasImage(RankArena.Models.Entities.TournamentItem? i)
+        => !string.IsNullOrWhiteSpace(i?.ImageUrl);
+
+    private static bool HasVideo(RankArena.Models.Entities.TournamentItem? i)
+        => !string.IsNullOrWhiteSpace(i?.YouTubeVideoId);
+}
+
+<style>
+    /* ✅ Sayfanın tamamını koyu yap (beyaz boşluklar gitsin) */
+    html, body {
+        background: #0a0f22 !important;
+        min-height: 100%;
+        margin: 0;
+    }
+
+    main {
+        background: transparent !important;
+    }
+
+    footer, .footer {
+        background: transparent !important;
+    }
+
+    /* container yerine tam genişlik istiyorsan burada kapatabilirsin:
+           .container { max-width: 1200px; } */
+
+    .ra-bg {
+        background: radial-gradient(1200px 600px at 30% 10%, rgba(255, 170, 0, 0.08), transparent 55%), radial-gradient(1000px 600px at 80% 30%, rgba(120, 80, 255, 0.08), transparent 55%), linear-gradient(135deg, #0f1530, #0b1024 55%, #0a0f22);
+        border-radius: 18px;
+        padding: 18px;
+        border: 1px solid rgba(255,255,255,0.06);
+        color: #e9ecff;
+        min-height: 640px;
+    }
+
+    .ra-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+
+    .ra-title {
+        font-weight: 900;
+        letter-spacing: .4px;
+        margin: 0;
+        font-size: 26px;
+    }
+
+    .ra-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        font-size: 13px;
+        color: rgba(233,236,255,0.9);
+        white-space: nowrap;
+    }
+
+    .ra-progress {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+        overflow: hidden;
+        margin-bottom: 14px;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+        .ra-progress > div {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #22c55e, #60a5fa);
+        }
+
+    .ra-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        height: 100%;
+        transition: transform .18s ease, border-color .18s ease;
+    }
+
+        .ra-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255,170,0,0.22);
+        }
+
+    /* ✅ Medya alanı hover büyüme */
+    .ra-media {
+        width: 100%;
+        background: rgba(255,255,255,0.03);
+        padding: 10px;
+        transition: transform .18s ease, box-shadow .18s ease;
+        transform-origin: center;
+    }
+
+    .ra-card:hover .ra-media {
+        transform: scale(1.03);
+        box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+    }
+
+    .ra-media iframe,
+    .ra-media img {
+        border-radius: 16px;
+    }
+
+    .ra-img {
+        width: 100%;
+        height: 280px;
+        object-fit: cover;
+        display: block;
+        background: rgba(255,255,255,0.03);
+    }
+
+    .ra-body {
+        padding: 14px;
+    }
+
+    .ra-name {
+        font-weight: 900;
+        font-size: 22px;
+        line-height: 1.15;
+        margin-bottom: 6px;
+    }
+
+    .ra-muted {
+        color: rgba(233,236,255,0.75);
+        font-size: 13px;
+    }
+
+    .ra-vs {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        min-height: 60px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        color: rgba(255,255,255,0.7);
+    }
+
+    .ra-btn {
+        width: 100%;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-weight: 900;
+        color: #fff;
+        background: linear-gradient(90deg, #ff2d55, #ff8a00);
+        box-shadow: 0 12px 26px rgba(255,90,0,0.18);
+        transition: transform .12s ease, filter .12s ease;
+    }
+
+        .ra-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.03);
+        }
+
+    .ra-empty {
+        height: 280px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.03);
+        color: rgba(233,236,255,0.7);
+    }
+</style>
+
+<div class="container py-4">
+    <div class="ra-bg">
+
+        <div class="ra-topbar">
+            <h2 class="ra-title m-0">
+                🏁 @(string.IsNullOrWhiteSpace(roundName) ? $"Round {Model.Round}" : roundName)
+                • Match @Model.MatchNumber
+            </h2>
+
+            <div class="d-flex flex-wrap gap-2 justify-content-end">
+                <span class="ra-pill">RunId: @Model.RunId</span>
+
+                @if (totalThisRound.HasValue && remainingThisRound.HasValue)
+                {
+                    <span class="ra-pill">Bu tur: @remainingThisRound / @totalThisRound kaldı</span>
+                }
+
+                @if (totalMatches > 0)
+                {
+                    <span class="ra-pill">📊 Genel: @completedMatches / @totalMatches bitti</span>
+                    <span class="ra-pill">⏳ Kalan: @remainingMatches</span>
+                    <span class="ra-pill">✅ %@progressPercent</span>
+                }
+            </div>
+        </div>
+
+        @if (totalMatches > 0)
+        {
+            <div class="ra-progress">
+                <div style="width:@progressPercent%"></div>
+            </div>
+        }
+
+        <div class="row g-3 align-items-stretch">
+            <!-- LEFT -->
+            <div class="col-lg-5">
+                <div class="ra-card">
+                    @{
+                        var leftHasImage = HasImage(left);
+                        var leftHasVideo = HasVideo(left);
+
+                        // Öncelik: Görsel varsa sadece görsel, yoksa video
+                        var showLeftImage = leftHasImage;
+                        var showLeftVideo = !leftHasImage && leftHasVideo;
+                    }
+
+                    @if (showLeftImage)
+                    {
+                        <div class="ra-media">
+                            <img src="@left!.ImageUrl" class="ra-img" />
+                        </div>
+                    }
+                    else if (showLeftVideo)
+                    {
+                        <div class="ra-media">
+                            <div class="ratio ratio-16x9">
+                                <iframe src="https://www.youtube.com/embed/@(left!.YouTubeVideoId)"
+                                        allowfullscreen></iframe>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="ra-empty">Görsel/Video yok</div>
+                    }
+
+                    <div class="ra-body">
+                        <div class="ra-name">@left?.Name</div>
+
+                        <form asp-action="BracketVote" method="post" class="mt-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="runId" value="@Model.RunId" />
+                            <input type="hidden" name="matchId" value="@Model.Id" />
+                            <input type="hidden" name="selectedItemId" value="@Model.LeftItemId" />
+                            <button class="ra-btn" type="submit">✅ Bunu Seç</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VS -->
+            <div class="col-lg-2 d-none d-lg-block">
+                <div class="ra-vs">V S</div>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="col-lg-5">
+                <div class="ra-card">
+                    @{
+                        var rightHasImage = HasImage(right);
+                        var rightHasVideo = HasVideo(right);
+
+                        var showRightImage = rightHasImage;
+                        var showRightVideo = !rightHasImage && rightHasVideo;
+                    }
+
+                    @if (showRightImage)
+                    {
+                        <div class="ra-media">
+                            <img src="@right!.ImageUrl" class="ra-img" />
+                        </div>
+                    }
+                    else if (showRightVideo)
+                    {
+                        <div class="ra-media">
+                            <div class="ratio ratio-16x9">
+                                <iframe src="https://www.youtube.com/embed/@(right!.YouTubeVideoId)"
+                                        allowfullscreen></iframe>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="ra-empty">Görsel/Video yok</div>
+                    }
+
+                    <div class="ra-body">
+                        <div class="ra-name">@right?.Name</div>
+
+                        <form asp-action="BracketVote" method="post" class="mt-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="runId" value="@Model.RunId" />
+                            <input type="hidden" name="matchId" value="@Model.Id" />
+                            <input type="hidden" name="selectedItemId" value="@Model.RightItemId" />
+                            <button class="ra-btn" type="submit">✅ Bunu Seç</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3 ra-muted">
+            Seçimini yaptığında otomatik olarak bir sonraki eşleşmeye geçeceksin.
+        </div>
+
+    </div>
+</div>
