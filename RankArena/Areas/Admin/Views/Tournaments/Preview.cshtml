@@ -1,0 +1,91 @@
+﻿@model RankArena.Models.ViewModels.TournamentDetailsVm
+@{
+    ViewData["Title"] = "Önizleme: " + Model.Tournament.Title;
+    var t = Model.Tournament;
+}
+
+<div class="mb-3">
+    <a asp-area="Admin" asp-controller="Tournaments" asp-action="Pending" class="btn btn-outline-secondary btn-sm">
+        ← Onay Listesine Dön
+    </a>
+</div>
+
+<div class="alert alert-warning">
+    ⚠️ Bu turnuva henüz <strong>yayınlanmamış</strong>. Admin önizlemesi görüntülüyorsunuz.
+</div>
+
+<div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:24px; margin-bottom:24px;">
+    @if (!string.IsNullOrWhiteSpace(t.CoverImageUrl))
+    {
+        <img src="@t.CoverImageUrl" alt="@t.Title"
+             style="width:100%; max-height:300px; object-fit:cover; border-radius:12px; margin-bottom:16px;" />
+    }
+
+    <h2 style="color:#ffb020; font-weight:700;">@t.Title</h2>
+
+    @if (t.Category != null)
+    {
+        <span class="badge bg-dark border mb-2">📂 @t.Category.Name</span>
+    }
+
+    <p style="color:rgba(233,236,255,0.7);">@t.Description</p>
+
+    <div style="color:rgba(233,236,255,0.45); font-size:0.85rem;">
+        Oluşturma: @t.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+        · Aktif Item: @Model.ActiveItemCount / @Model.TotalItemCount
+        · Toplam Oynanma: @Model.TotalPlayCount
+    </div>
+</div>
+
+<h4 style="color:#e9ecff;">Itemlar (@Model.TotalItemCount)</h4>
+
+@if (!t.Items.Any())
+{
+    <p style="color:rgba(233,236,255,0.5);">Henüz item eklenmemiş.</p>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        @foreach (var item in t.Items.Where(i => i.IsActive))
+        {
+            var imgUrl = !string.IsNullOrWhiteSpace(item.ImageUrl)
+            ? item.ImageUrl
+            : (!string.IsNullOrWhiteSpace(item.YouTubeVideoId)
+            ? $"https://img.youtube.com/vi/{item.YouTubeVideoId}/hqdefault.jpg"
+            : null);
+
+            <div class="col-md-3 col-sm-4 col-6">
+                <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px; text-align:center;">
+                    @if (imgUrl != null)
+                    {
+                        <img src="@imgUrl" alt="@item.Name"
+                             style="width:100%; height:100px; object-fit:cover; border-radius:8px; margin-bottom:8px;" />
+                    }
+                    else
+                    {
+                        <div style="width:100%; height:100px; border-radius:8px; margin-bottom:8px; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; font-size:1.5rem;">
+                            🎮
+                        </div>
+                    }
+                    <div style="color:#e9ecff; font-size:0.85rem; font-weight:600;">@item.Name</div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<div class="d-flex gap-2 mt-4">
+    <form method="post"
+          asp-area="Admin"
+          asp-controller="Tournaments"
+          asp-action="Publish"
+          class="d-inline">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@t.Id" />
+        <button type="submit" class="btn btn-success btn-lg px-4">✅ Yayınla</button>
+    </form>
+
+    <a asp-area="Admin" asp-controller="Tournaments" asp-action="Pending" class="btn btn-outline-secondary btn-lg px-4">
+        Geri Dön
+    </a>
+</div>

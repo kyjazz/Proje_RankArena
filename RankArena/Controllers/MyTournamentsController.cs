@@ -25,6 +25,7 @@ public class MyTournamentsController : Controller
         var userId = _userManager.GetUserId(User);
 
         var list = await _db.Tournaments
+            .Include(x => x.Category)
             .Where(x => x.CreatedByUserId == userId)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
@@ -33,15 +34,20 @@ public class MyTournamentsController : Controller
     }
 
     [HttpGet]
-    public IActionResult Create() => View();
+    public async Task<IActionResult> Create()
+    {
+        ViewBag.Categories = await _db.Categories.OrderBy(c => c.Name).ToListAsync();
+        return View();
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(string title, string? description, string? coverImageUrl)
+    public async Task<IActionResult> Create(string title, string? description, string? coverImageUrl, int? categoryId)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
             ModelState.AddModelError("", "Başlık zorunlu.");
+            ViewBag.Categories = await _db.Categories.OrderBy(c => c.Name).ToListAsync();
             return View();
         }
 
@@ -65,7 +71,8 @@ public class MyTournamentsController : Controller
             CoverImageUrl = coverImageUrl,
             Slug = slug,
             CreatedByUserId = userId,
-            IsPublished = false
+            IsPublished = false,
+            CategoryId = categoryId
         };
 
         _db.Tournaments.Add(t);
@@ -81,9 +88,12 @@ public class MyTournamentsController : Controller
 
         var t = await _db.Tournaments
             .Include(x => x.Items)
+            .Include(x => x.Category)
             .FirstOrDefaultAsync(x => x.Id == id && x.CreatedByUserId == userId);
 
         if (t == null) return NotFound();
+
+        ViewBag.Categories = await _db.Categories.OrderBy(c => c.Name).ToListAsync();
 
         return View(t);
     }
@@ -91,7 +101,7 @@ public class MyTournamentsController : Controller
     // POST: /MyTournaments/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, string title, string? description, string? coverImageUrl)
+    public async Task<IActionResult> Edit(int id, string title, string? description, string? coverImageUrl, int? categoryId)
     {
         var userId = _userManager.GetUserId(User);
 
@@ -109,6 +119,7 @@ public class MyTournamentsController : Controller
         t.Title = title.Trim();
         t.Description = description;
         t.CoverImageUrl = coverImageUrl;
+        t.CategoryId = categoryId;
 
         // ✅ herhangi bir değişiklik sonrası yeniden onaya düşsün
         t.IsPublished = false;
@@ -142,7 +153,7 @@ public class MyTournamentsController : Controller
             TournamentId = t.Id,
             Name = name.Trim(),
             ImageUrl = imageUrl,
-            YouTubeVideoId = youTubeVideoId,
+            YouTubeVideoId = YouTubeHelper.ExtractVideoId(youTubeVideoId),
             IsActive = true
         };
 
@@ -178,7 +189,7 @@ public class MyTournamentsController : Controller
 
         item.Name = name.Trim();
         item.ImageUrl = imageUrl;
-        item.YouTubeVideoId = youTubeVideoId;
+        item.YouTubeVideoId = YouTubeHelper.ExtractVideoId(youTubeVideoId);
 
         // ✅ item güncellemesi => unpublish
         item.Tournament.IsPublished = false;

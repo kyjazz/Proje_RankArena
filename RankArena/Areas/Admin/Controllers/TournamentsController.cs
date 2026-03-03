@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RankArena.Data;
+using RankArena.Models.Entities;
+using RankArena.Models.ViewModels;
 
 namespace RankArena.Areas.Admin.Controllers;
 
@@ -26,6 +28,33 @@ public class TournamentsController : Controller
             .ToListAsync();
 
         return View(list);
+    }
+
+    // GET: /Admin/Tournaments/Preview/5
+    public async Task<IActionResult> Preview(int id)
+    {
+        var t = await _db.Tournaments
+            .Include(x => x.Items)
+            .Include(x => x.Category)
+            .Include(x => x.Comments)
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (t == null) return NotFound();
+
+        var totalPlayCount = await _db.Runs
+            .CountAsync(r => r.TournamentId == t.Id && r.FinishedAt != null);
+
+        var vm = new TournamentDetailsVm
+        {
+            Tournament = t,
+            ActiveItemCount = t.Items.Count(i => i.IsActive),
+            TotalItemCount = t.Items.Count,
+            Comments = t.Comments.OrderByDescending(c => c.CreatedAt).ToList(),
+            CommentCount = t.Comments.Count,
+            TotalPlayCount = totalPlayCount
+        };
+
+        return View(vm);
     }
 
     // POST: /Admin/Tournaments/Publish

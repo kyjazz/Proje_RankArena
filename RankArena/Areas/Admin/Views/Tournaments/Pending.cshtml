@@ -60,7 +60,6 @@
                             </td>
 
                             <td class="d-flex gap-2">
-                                <!-- ✅ DOĞRU ROUTE: Admin Area -->
                                 <form method="post"
                                       asp-area="Admin"
                                       asp-controller="Tournaments"
@@ -71,7 +70,8 @@
                                     <button type="submit" class="btn btn-accent btn-sm px-3">Yayınla</button>
                                 </form>
 
-                                <a class="btn btn-ghost btn-sm px-3" target="_blank" href="/t/@t.Slug">
+                                <a class="btn btn-ghost btn-sm px-3" target="_blank"
+                                   asp-area="Admin" asp-controller="Tournaments" asp-action="Preview" asp-route-id="@t.Id">
                                     Önizle
                                 </a>
                             </td>

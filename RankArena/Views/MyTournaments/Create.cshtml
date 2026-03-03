@@ -1,4 +1,8 @@
-﻿<h2>Turnuva Oluştur</h2>
+﻿﻿@using RankArena.Models.Entities
+@{
+}
+
+<h2>Turnuva Oluştur</h2>
 
 <form method="post">
     @Html.AntiForgeryToken()
@@ -16,6 +20,20 @@
     <div class="mb-2">
         <label class="form-label">Kapak Görsel URL (opsiyon)</label>
         <input class="form-control" name="coverImageUrl" />
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label">Kategori</label>
+        <select class="form-control" name="categoryId">
+            <option value="">-- Kategori Seçin (opsiyonel) --</option>
+            @if (ViewBag.Categories != null)
+            {
+                foreach (Category c in ViewBag.Categories)
+                {
+                    <option value="@c.Id">@c.Name</option>
+                }
+            }
+        </select>
     </div>
 
     <button class="btn btn-primary" type="submit">Kaydet (Onay Bekler)</button>
