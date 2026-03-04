@@ -41,5 +41,6 @@ namespace RankArena.Models.Entities
         // -----------------------------
         public List<TournamentItem> Items { get; set; } = new();
         public List<TournamentComment> Comments { get; set; } = new();
+        public List<TournamentRating> Ratings { get; set; } = new();
     }
 }

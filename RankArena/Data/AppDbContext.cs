@@ -32,6 +32,9 @@ public class AppDbContext : IdentityDbContext<IdentityUser, IdentityRole, string
     // YORUM
     public DbSet<TournamentComment> TournamentComments => Set<TournamentComment>();
 
+    // PUAN (RATING)
+    public DbSet<TournamentRating> TournamentRatings => Set<TournamentRating>();
+
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -271,5 +274,27 @@ public class AppDbContext : IdentityDbContext<IdentityUser, IdentityRole, string
         b.Entity<TournamentComment>()
             .Property(x => x.UserName)
             .IsRequired();
+
+        // -------------------------------------------------
+        // TOURNAMENT RATINGS (PUAN)
+        // -------------------------------------------------
+        b.Entity<TournamentRating>()
+            .HasOne(x => x.Tournament)
+            .WithMany(t => t.Ratings)
+            .HasForeignKey(x => x.TournamentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        b.Entity<TournamentRating>()
+            .Property(x => x.UserId)
+            .IsRequired();
+
+        b.Entity<TournamentRating>()
+            .Property(x => x.Score)
+            .IsRequired();
+
+        // Aynı kullanıcı aynı turnuvaya sadece 1 kez puan verebilir
+        b.Entity<TournamentRating>()
+            .HasIndex(x => new { x.TournamentId, x.UserId })
+            .IsUnique();
     }
 }

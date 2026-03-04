@@ -195,7 +195,7 @@
             font-weight: 700;
         }
 
-    /* Oyun modları kartları */
+    /* Oyun modlari kartlari */
     .modes-section h4 {
         color: #e9ecff;
         font-weight: 800;
@@ -255,7 +255,7 @@
                 text-decoration: none;
             }
 
-    /* ========== SAĞ KOLON ========== */
+    /* ========== SAG KOLON ========== */
     .right-col section {
         background: rgba(255,255,255,0.03);
         border: 1px solid rgba(255,255,255,0.08);
@@ -274,7 +274,7 @@
         gap: 8px;
     }
 
-    /* ========== SPOILER GİZLEME ========== */
+    /* ========== SPOILER GIZLEME ========== */
     .spoiler-wrapper {
         position: relative;
     }
@@ -337,7 +337,7 @@
             color: #070b1a;
         }
 
-    /* stat satırları */
+    /* stat satirlari */
     .winner-row {
         display: flex;
         justify-content: space-between;
@@ -361,7 +361,7 @@
         font-size: 0.78rem;
     }
 
-    /* ========== YORUM BÖLÜMÜ ========== */
+    /* ========== YORUM BOLUMU ========== */
     .comment-box {
         background: rgba(255,255,255,0.03);
         border: 1px solid rgba(255,255,255,0.08);
@@ -487,7 +487,7 @@
         padding-left: 42px;
     }
 
-    /* İstatistik alt bölüm */
+    /* Istatistik alt bolum */
     .stat-sub-panel {
         margin-top: 12px;
     }
@@ -498,6 +498,176 @@
             font-size: 0.8rem;
             margin-bottom: 8px;
         }
+
+    /* ========== PUAN (RATING) SISTEMI ========== */
+    .rating-box {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+
+    .rating-display {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,176,32,0.08);
+        border: 1px solid rgba(255,176,32,0.2);
+        border-radius: 12px;
+        padding: 8px 16px;
+    }
+
+    .rating-star-icon {
+        color: #ffb020;
+        font-size: 1.2rem;
+    }
+
+    .rating-score {
+        color: #e9ecff;
+        font-weight: 800;
+        font-size: 1.1rem;
+    }
+
+    .rating-max {
+        color: rgba(233,236,255,0.4);
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .rating-dot {
+        color: rgba(233,236,255,0.3);
+        font-size: 0.8rem;
+    }
+
+    .rating-count {
+        color: rgba(233,236,255,0.5);
+        font-size: 0.82rem;
+    }
+
+    .rating-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(255,176,32,0.1);
+        border: 1px solid rgba(255,176,32,0.25);
+        color: #ffb020;
+        font-weight: 700;
+        font-size: 0.8rem;
+        padding: 6px 14px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .rating-action-btn:hover {
+            background: rgba(255,176,32,0.2);
+            border-color: #ffb020;
+        }
+
+    .rating-picker {
+        display: none;
+        background: rgba(15,20,40,0.97);
+        border: 1px solid rgba(255,176,32,0.3);
+        border-radius: 14px;
+        padding: 16px;
+        margin-top: 10px;
+        margin-bottom: 16px;
+        animation: fadeIn 0.2s ease;
+    }
+
+        .rating-picker.show {
+            display: block;
+        }
+
+    .rating-picker-title {
+        color: #ffb020;
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-bottom: 12px;
+        text-align: center;
+    }
+
+    .rating-stars {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 12px;
+    }
+
+    .star-btn {
+        background: none;
+        border: none;
+        font-size: 1.6rem;
+        cursor: pointer;
+        color: rgba(233,236,255,0.2);
+        transition: all .15s;
+        padding: 2px 4px;
+    }
+
+        .star-btn:hover,
+        .star-btn.active {
+            color: #ffb020;
+            transform: scale(1.15);
+        }
+
+        .star-btn.hovered {
+            color: #ffc040;
+        }
+
+    .rating-selected-text {
+        text-align: center;
+        color: rgba(233,236,255,0.6);
+        font-size: 0.8rem;
+        margin-bottom: 10px;
+        min-height: 20px;
+    }
+
+    .btn-submit-rating {
+        display: block;
+        width: 100%;
+        background: #ffb020;
+        color: #070b1a;
+        font-weight: 700;
+        border: none;
+        padding: 10px;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all .15s;
+    }
+
+        .btn-submit-rating:hover {
+            background: #ffc040;
+        }
+
+        .btn-submit-rating:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .alert-success-custom {
+        background: rgba(34,197,94,0.1);
+        border: 1px solid rgba(34,197,94,0.3);
+        color: #22c55e;
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-size: 0.85rem;
+        margin-bottom: 16px;
+        font-weight: 600;
+    }
 </style>
 
 @if (TempData["Error"] != null)
@@ -505,12 +675,17 @@
     <div class="alert alert-danger">@TempData["Error"]</div>
 }
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success-custom">@TempData["Success"]</div>
+}
+
 <div class="details-page">
 
-    <!-- ÜST BADGE -->
+    <!-- UST BADGE -->
     <div class="top-badge">🏆 Turnuva</div>
 
-    <!-- ANA GRİD -->
+    <!-- ANA GRID -->
     <div class="detail-grid">
 
         <!-- ========== SOL KOLON ========== -->
@@ -549,13 +724,13 @@
                 <a href="/Play/Start?slug=@t.Slug&mode=tier" class="mode-tag">Tier List</a>
             </div>
 
-            <!-- Açıklama -->
+            <!-- Aciklama -->
             @if (!string.IsNullOrWhiteSpace(t.Description))
             {
                 <div class="detail-desc">@t.Description</div>
             }
 
-            <!-- Oluşturan -->
+            <!-- Olusturan -->
             <div class="creator-box">
                 <div class="creator-avatar">A</div>
                 <div>
@@ -563,6 +738,71 @@
                     <div class="creator-name">Anonim</div>
                 </div>
             </div>
+
+            <!-- ===== PUAN (RATING) BOLUMU ===== -->
+            <div class="rating-box">
+                <div class="rating-display">
+                    <span class="rating-star-icon">⭐</span>
+                    <span class="rating-score">@Model.AverageRating</span>
+                    <span class="rating-max">/10</span>
+                </div>
+                <span class="rating-dot">·</span>
+                <span class="rating-count">@Model.TotalRatingCount oy</span>
+
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <button class="rating-action-btn" onclick="toggleRatingPicker()">
+                        ⭐ @(Model.CurrentUserRating.HasValue ? "Puanını Güncelle" : "Puan Ver")
+                    </button>
+                }
+                else
+                {
+                    <a href="/Identity/Account/Login" class="rating-action-btn" style="text-decoration:none;">
+                        ⭐ Puan Ver
+                    </a>
+                }
+            </div>
+
+            <!-- Puan Secici (Giris yapan kullanicilar icin) -->
+            @if (SignInManager.IsSignedIn(User))
+            {
+                <div class="rating-picker" id="ratingPicker">
+                    <div class="rating-picker-title">Turnuvaya puan ver (1-10)</div>
+                    <div class="rating-stars" id="ratingStars">
+                        @for (int i = 1; i <= 10; i++)
+                        {
+                            var starClass = Model.CurrentUserRating.HasValue && i <= Model.CurrentUserRating.Value ? "active" : "";
+                            <button type="button"
+                                    class="star-btn @starClass"
+                                    data-value="@i"
+                                    onclick="selectRating(@i)"
+                                    onmouseenter="hoverRating(@i)"
+                                    onmouseleave="unhoverRating()">
+                                ★
+                            </button>
+                        }
+                    </div>
+                    <div class="rating-selected-text" id="ratingText">
+                        @if (Model.CurrentUserRating.HasValue)
+                        {
+                            <text>Mevcut puanınız: @Model.CurrentUserRating.Value/10</text>
+                        }
+                        else
+                        {
+                            <text>Bir puan seçin</text>
+                        }
+                    </div>
+                    <form method="post" asp-controller="Tournaments" asp-action="RateTournament" id="ratingForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="tournamentId" value="@t.Id" />
+                        <input type="hidden" name="score" id="ratingScoreInput" value="@(Model.CurrentUserRating ?? 0)" />
+                        <button type="submit" class="btn-submit-rating" id="btnSubmitRating"
+                        @(Model.CurrentUserRating.HasValue ? "" : "disabled")>
+                            @(Model.CurrentUserRating.HasValue ? "Puanı Güncelle" : "Puanı Gönder")
+                        </button>
+                    </form>
+                </div>
+            }
 
             <!-- Meta Bilgiler -->
             <div class="meta-row">
@@ -589,7 +829,7 @@
                 }
             </div>
 
-            <!-- Oyun Modları Kartları -->
+            <!-- Oyun Modlari Kartlari -->
             <div class="modes-section">
                 <h4>🎮 Oyun Modu Seç</h4>
                 <div class="mode-cards">
@@ -648,10 +888,10 @@
             </div>
         </div>
 
-        <!-- ========== SAĞ KOLON ========== -->
+        <!-- ========== SAG KOLON ========== -->
         <div class="right-col">
 
-            <!-- KAZANAN SEÇİMLER (SPOİLER) -->
+            <!-- KAZANAN SECIMLER (SPOILER) -->
             @if (stats != null && (stats.TotalBracketRuns > 0 || stats.TotalBlindRuns > 0 || stats.TotalTierRuns > 0))
             {
                 <section>
@@ -764,8 +1004,58 @@
 </div>
 
 <script>
+    // Spoiler
     function revealSpoiler() {
         document.getElementById('spoilerContent').classList.add('revealed');
         document.getElementById('spoilerOverlay').classList.add('hidden');
+    }
+
+    // Rating Picker Ac/Kapa
+    function toggleRatingPicker() {
+        var picker = document.getElementById('ratingPicker');
+        if (picker) {
+            picker.classList.toggle('show');
+        }
+    }
+
+    // Secilen puan
+    var selectedRating = @(Model.CurrentUserRating ?? 0);
+
+    function selectRating(value) {
+        selectedRating = value;
+        document.getElementById('ratingScoreInput').value = value;
+        document.getElementById('ratingText').textContent = 'Seçilen puan: ' + value + '/10';
+        document.getElementById('btnSubmitRating').disabled = false;
+        document.getElementById('btnSubmitRating').textContent = 'Puanı Gönder';
+
+        // Yildizlari guncelle
+        var stars = document.querySelectorAll('#ratingStars .star-btn');
+        stars.forEach(function (star) {
+            var starVal = parseInt(star.getAttribute('data-value'));
+            if (starVal <= value) {
+                star.classList.add('active');
+            } else {
+                star.classList.remove('active');
+            }
+        });
+    }
+
+    function hoverRating(value) {
+        var stars = document.querySelectorAll('#ratingStars .star-btn');
+        stars.forEach(function (star) {
+            var starVal = parseInt(star.getAttribute('data-value'));
+            if (starVal <= value) {
+                star.classList.add('hovered');
+            } else {
+                star.classList.remove('hovered');
+            }
+        });
+    }
+
+    function unhoverRating() {
+        var stars = document.querySelectorAll('#ratingStars .star-btn');
+        stars.forEach(function (star) {
+            star.classList.remove('hovered');
+        });
     }
 </script>

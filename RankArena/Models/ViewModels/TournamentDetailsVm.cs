@@ -16,6 +16,11 @@ public class TournamentDetailsVm
 
     // Toplam oynanma
     public int TotalPlayCount { get; set; }
+
+    // Puan (Rating) Sistemi
+    public double AverageRating { get; set; }
+    public int TotalRatingCount { get; set; }
+    public int? CurrentUserRating { get; set; } // Giriş yapmış kullanıcının verdiği puan (null = henüz vermemiş)
 }
 
 public class WinnerStatVm

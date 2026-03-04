@@ -51,6 +51,7 @@ public class TournamentsController : Controller
             .Include(x => x.Items)
             .Include(x => x.Category)
             .Include(x => x.Comments)
+            .Include(x => x.Ratings)
             .FirstOrDefaultAsync(x => x.Slug == slug && x.IsPublished);
 
         if (t == null) return NotFound();
@@ -182,6 +183,23 @@ public class TournamentsController : Controller
         // Yorumları tarihe göre sırala
         var comments = t.Comments.OrderByDescending(c => c.CreatedAt).ToList();
 
+        // ===== PUAN (RATING) HESAPLAMA =====
+        var ratings = t.Ratings;
+        var totalRatingCount = ratings.Count;
+        var averageRating = totalRatingCount > 0
+            ? Math.Round(ratings.Average(r => r.Score), 1)
+            : 0;
+
+        // Giriş yapmış kullanıcının mevcut puanı
+        int? currentUserRating = null;
+        var currentUser = await _userManager.GetUserAsync(User);
+        if (currentUser != null)
+        {
+            var existingRating = ratings.FirstOrDefault(r => r.UserId == currentUser.Id);
+            if (existingRating != null)
+                currentUserRating = existingRating.Score;
+        }
+
         var vm = new TournamentDetailsVm
         {
             Tournament = t,
@@ -189,7 +207,10 @@ public class TournamentsController : Controller
             ActiveItemCount = t.Items.Count(i => i.IsActive),
             Comments = comments,
             CommentCount = comments.Count,
-            TotalPlayCount = totalPlayCount
+            TotalPlayCount = totalPlayCount,
+            AverageRating = averageRating,
+            TotalRatingCount = totalRatingCount,
+            CurrentUserRating = currentUserRating
         };
 
         ViewBag.Stats = stats;
@@ -231,5 +252,57 @@ public class TournamentsController : Controller
         await _db.SaveChangesAsync();
 
         return Redirect($"/t/{t.Slug}#comments");
+    }
+
+    // POST: /Tournaments/RateTournament
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RateTournament(int tournamentId, int score)
+    {
+        // Puan 1-10 arası olmalı
+        if (score < 1 || score > 10)
+        {
+            TempData["Error"] = "Puan 1 ile 10 arasında olmalıdır.";
+            var tournament = await _db.Tournaments.FindAsync(tournamentId);
+            if (tournament != null)
+                return Redirect($"/t/{tournament.Slug}");
+            return RedirectToAction("Index");
+        }
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Unauthorized();
+
+        var t = await _db.Tournaments.FindAsync(tournamentId);
+        if (t == null || !t.IsPublished) return NotFound();
+
+        // Kullanıcının daha önce puan verip vermediğini kontrol et
+        var existingRating = await _db.TournamentRatings
+            .FirstOrDefaultAsync(r => r.TournamentId == tournamentId && r.UserId == user.Id);
+
+        if (existingRating != null)
+        {
+            // Güncelle
+            existingRating.Score = score;
+            existingRating.UpdatedAt = DateTime.UtcNow;
+            _db.TournamentRatings.Update(existingRating);
+        }
+        else
+        {
+            // Yeni puan ekle
+            var rating = new TournamentRating
+            {
+                TournamentId = tournamentId,
+                UserId = user.Id,
+                Score = score,
+                CreatedAt = DateTime.UtcNow
+            };
+            _db.TournamentRatings.Add(rating);
+        }
+
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = "Puanınız kaydedildi!";
+        return Redirect($"/t/{t.Slug}");
     }
 }
