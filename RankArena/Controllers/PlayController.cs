@@ -208,6 +208,7 @@ public class PlayController : Controller
 
         var totalRounds = (int)Math.Log2(run.TotalSlots ?? 0);
         ViewBag.RoundName = GetRoundName(next.Round, totalRounds);
+        ViewBag.TotalSlots = run.TotalSlots ?? 0;  // ✅ YENİ: Quizei tarzı tur pill için
 
         return View(next);
     }
