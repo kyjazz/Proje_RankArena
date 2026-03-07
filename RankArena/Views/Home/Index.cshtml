@@ -1,201 +1,674 @@
-﻿@{
+﻿﻿@{
     ViewData["Title"] = "Ana Sayfa";
-    var tournaments = ViewBag.Tournaments as List<RankArena.Models.Entities.Tournament> ?? new();
+    var popularTournaments = ViewBag.PopularTournaments as List<RankArena.Models.Entities.Tournament> ?? new();
+    var recentTournaments = ViewBag.RecentTournaments as List<RankArena.Models.Entities.Tournament> ?? new();
     var categories = ViewBag.Categories as List<RankArena.Models.Entities.Category> ?? new();
+    var creatorNames = ViewBag.CreatorNames as Dictionary<string, string> ?? new();
+}
+
+@functions {
+    string GetCreatorName(RankArena.Models.Entities.Tournament t, Dictionary<string, string> names)
+    {
+        if (!string.IsNullOrEmpty(t.CreatedByUserId) && names.ContainsKey(t.CreatedByUserId))
+            return names[t.CreatedByUserId];
+        return "Anonim";
+    }
 }
 
 <style>
-    .hero {
-        background: linear-gradient(135deg, #0b1640 0%, #1a0a3e 50%, #070b1a 100%);
-        border-radius: 20px;
-        padding: 48px 32px;
-        text-align: center;
-        margin-bottom: 32px;
-        border: 1px solid rgba(255,255,255,0.08);
+    /* ========== ANA SAYFA STİLLERİ ========== */
+    .home-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 20px;
     }
 
-        .hero h1 {
-            color: #ffb020;
-            font-weight: 900;
-            font-size: 2.4rem;
-        }
+    /* ---------- SECTION BAŞLIK ---------- */
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        margin-top: 40px;
+    }
 
-        .hero p {
-            color: rgba(233,236,255,0.75);
-            font-size: 1.1rem;
-            max-width: 600px;
-            margin: 12px auto 24px;
+        .section-header:first-child {
+            margin-top: 24px;
         }
-
-        .hero .btn-start {
-            background: #ffb020;
-            color: #070b1a;
-            font-weight: 700;
-            border: none;
-            padding: 12px 32px;
-            border-radius: 12px;
-            font-size: 1rem;
-        }
-
-            .hero .btn-start:hover {
-                background: #ffc040;
-            }
 
     .section-title {
-        color: #e9ecff;
-        font-weight: 800;
-        font-size: 1.3rem;
-        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--accent);
+        font-weight: 900;
+        font-size: 1.5rem;
+        letter-spacing: -0.3px;
     }
 
-    .cat-pill {
-        display: inline-block;
-        padding: 6px 16px;
-        border-radius: 20px;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.10);
-        color: rgba(233,236,255,0.85);
-        text-decoration: none;
+        .section-title .s-icon {
+            font-size: 1.4rem;
+        }
+
+    .section-subtitle {
+        color: var(--muted);
         font-size: 0.85rem;
-        margin: 4px;
-        transition: all .2s;
+        margin-top: 2px;
     }
 
-        .cat-pill:hover {
-            background: rgba(255,176,32,0.15);
-            border-color: #ffb020;
-            color: #ffb020;
+    .see-all {
+        color: var(--accent);
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition: all .15s;
+    }
+
+        .see-all:hover {
+            color: #ffc040;
+            gap: 8px;
         }
 
-    .t-card {
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,255,255,0.08);
+    /* ---------- SLIDER CONTAINER ---------- */
+    .slider-wrapper {
+        position: relative;
+    }
+
+    .slider-track {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        padding-bottom: 10px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+        .slider-track::-webkit-scrollbar {
+            display: none;
+        }
+
+    .slider-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #070b1a;
+        border: none;
+        font-size: 1.3rem;
+        font-weight: 900;
+        cursor: pointer;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        transition: all .15s;
+    }
+
+        .slider-btn:hover {
+            background: #ffc040;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .slider-btn.left {
+            left: -10px;
+        }
+
+        .slider-btn.right {
+            right: -10px;
+        }
+
+    /* ---------- POPÜLER KART (BÜYÜK) ---------- */
+    .popular-card {
+        flex: 0 0 300px;
+        min-width: 300px;
         border-radius: 16px;
-        padding: 20px;
-        transition: all .25s;
+        overflow: hidden;
+        position: relative;
         text-decoration: none;
+        color: #fff;
         display: block;
-        color: #e9ecff;
+        transition: transform .25s, box-shadow .25s;
+        background: #111640;
+        border: 1px solid rgba(255,255,255,0.06);
     }
 
-        .t-card:hover {
-            border-color: rgba(255,176,32,0.4);
-            transform: translateY(-2px);
-            color: #e9ecff;
+        .popular-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+            color: #fff;
         }
 
-        .t-card h5 {
-            font-weight: 700;
-            margin-bottom: 6px;
-            color: #ffb020;
-        }
-
-        .t-card .desc {
-            color: rgba(233,236,255,0.6);
-            font-size: 0.85rem;
-        }
-
-        .t-card .meta {
-            color: rgba(233,236,255,0.45);
-            font-size: 0.78rem;
-            margin-top: 10px;
-        }
-
-        .t-card img {
+        .popular-card .card-img {
             width: 100%;
-            height: 140px;
+            height: 180px;
             object-fit: cover;
-            border-radius: 10px;
-            margin-bottom: 12px;
+            display: block;
         }
 
-        .t-card .no-img {
+        .popular-card .card-img-placeholder {
             width: 100%;
-            height: 140px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, #1a0a3e, #0b1640);
+            height: 180px;
+            background: linear-gradient(135deg, #1a0a3e 0%, #0b1640 50%, #1a1050 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 3rem;
         }
 
-    .search-box {
-        max-width: 400px;
+        /* Overlay bilgileri (kullanıcı & oynanma) */
+        .popular-card .card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 180px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.7) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 12px 14px;
+        }
+
+    .card-overlay-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 
-        .search-box input {
+    .card-user {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0,0,0,0.5);
+        padding: 4px 10px 4px 6px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        backdrop-filter: blur(4px);
+    }
+
+    .card-user-avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        font-weight: 800;
+    }
+
+    .card-plays {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(0,0,0,0.5);
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        backdrop-filter: blur(4px);
+    }
+
+    .popular-card .card-body-info {
+        padding: 14px 16px 16px;
+    }
+
+    .popular-card .card-title {
+        font-weight: 800;
+        font-size: 1rem;
+        line-height: 1.3;
+        margin-bottom: 10px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .card-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 0.75rem;
+        color: rgba(233,236,255,0.5);
+    }
+
+        .card-meta-row span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+    .card-category-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(255,176,32,0.12);
+        color: var(--accent);
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+
+    /* ---------- SON EKLENEN KART ---------- */
+    .recent-card {
+        flex: 0 0 280px;
+        min-width: 280px;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        text-decoration: none;
+        color: #fff;
+        display: block;
+        transition: transform .25s, box-shadow .25s;
+        background: #111640;
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+
+        .recent-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+            color: #fff;
+        }
+
+        .recent-card .card-img {
+            width: 100%;
+            height: 170px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .recent-card .card-img-placeholder {
+            width: 100%;
+            height: 170px;
+            background: linear-gradient(135deg, #1a0a3e 0%, #0b1640 50%, #1a1050 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+        }
+
+        .recent-card .card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 170px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, transparent 35%, transparent 55%, rgba(0,0,0,0.65) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px 12px;
+        }
+
+    .card-rating {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(0,0,0,0.55);
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        backdrop-filter: blur(4px);
+        align-self: flex-end;
+    }
+
+        .card-rating .star {
+            color: var(--accent);
+        }
+
+    .card-bookmark {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        width: 32px;
+        height: 32px;
+        background: rgba(255,107,53,0.85);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all .15s;
+    }
+
+        .card-bookmark:hover {
+            background: rgba(255,107,53,1);
+            transform: scale(1.1);
+        }
+
+    .recent-card .card-body-info {
+        padding: 12px 14px 14px;
+    }
+
+    .recent-card .card-title {
+        font-weight: 800;
+        font-size: 0.95rem;
+        line-height: 1.3;
+        margin-bottom: 8px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* ---------- KATEGORİ ÇUBUĞU ---------- */
+    .category-bar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 32px;
+        margin-bottom: 8px;
+    }
+
+    .cat-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 20px;
+        border-radius: 25px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: rgba(233,236,255,0.8);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all .2s;
+    }
+
+        .cat-chip:hover,
+        .cat-chip.active {
+            background: rgba(255,176,32,0.15);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+    /* ---------- ARAMA ---------- */
+    .home-search {
+        margin-top: 16px;
+        margin-bottom: 8px;
+        max-width: 500px;
+    }
+
+        .home-search input {
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.12);
             color: #e9ecff;
-            border-radius: 10px;
+            border-radius: 25px;
+            padding: 10px 20px;
+            width: 100%;
+            font-size: 0.9rem;
         }
 
-            .search-box input::placeholder {
+            .home-search input::placeholder {
                 color: rgba(233,236,255,0.4);
             }
 
-            .search-box input:focus {
+            .home-search input:focus {
+                outline: none;
                 background: rgba(255,255,255,0.08);
-                border-color: #ffb020;
-                box-shadow: none;
-                color: #e9ecff;
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px rgba(255,176,32,0.1);
             }
+
+    /* ---------- BOŞ DURUM ---------- */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: rgba(233,236,255,0.4);
+    }
+
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+    /* ---------- SCROLL TOP ---------- */
+    .scroll-top-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #070b1a;
+        border: none;
+        font-size: 1.3rem;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+        transition: all .2s;
+    }
+
+        .scroll-top-btn:hover {
+            background: #ffc040;
+            transform: scale(1.1);
+        }
+
+        .scroll-top-btn.visible {
+            display: flex;
+        }
+
+    /* ---------- RESPONSİVE ---------- */
+    @@media (max-width: 768px) {
+        .popular-card {
+            flex: 0 0 260px;
+            min-width: 260px;
+        }
+
+        .recent-card {
+            flex: 0 0 240px;
+            min-width: 240px;
+        }
+
+        .slider-btn {
+            display: none;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+        }
+    }
 </style>
 
-<!-- HERO -->
-<div class="hero">
-    <h1>🏆 RankArena</h1>
-    <p>Yemekler, şarkılar, oyunlar, karakterler... Favori içeriklerini sırala, turnuvalarda yarıştır, tier listeni oluştur!</p>
-    <a href="/Tournaments" class="btn btn-start">Turnuvaları Keşfet →</a>
-</div>
+<div class="home-wrapper">
 
-<!-- KATEGORİLER -->
-@if (categories.Any())
-{
-    <div class="mb-4">
-        <div class="section-title">📂 Kategoriler</div>
-        <a href="/Tournaments" class="cat-pill">Tümü</a>
-        @foreach (var c in categories)
-        {
-            <a href="/Tournaments?categoryId=@c.Id" class="cat-pill">@c.Name</a>
-        }
+    <!-- ==================== POPÜLER TURNUVALAR ==================== -->
+    <div class="section-header" style="margin-top:24px;">
+        <div>
+            <div class="section-title">
+                <span class="s-icon">🔥</span> Popüler
+            </div>
+            <div class="section-subtitle">En çok ilgi gören turnuvalar</div>
+        </div>
+        <a href="/Tournaments?sort=popular" class="see-all">Tümünü Gör <span>›</span></a>
     </div>
+
+    @if (popularTournaments.Any())
+    {
+        <div class="slider-wrapper">
+            <button class="slider-btn left" onclick="slide(this, -320)">‹</button>
+            <div class="slider-track">
+                @foreach (var t in popularTournaments)
+                {
+                    var ratingCount = t.Ratings?.Count ?? 0;
+                    var avgRating = ratingCount > 0 ? t.Ratings!.Average(r => r.Score).ToString("0.0") : "0.0";
+                    var itemCount = t.Items?.Count ?? 0;
+                    var creatorDisplay = GetCreatorName(t, creatorNames);
+                    var creatorLetter = !string.IsNullOrEmpty(creatorDisplay) ? creatorDisplay[0].ToString().ToUpper() : "A";
+
+                    <a href="/t/@t.Slug" class="popular-card">
+                        @if (!string.IsNullOrWhiteSpace(t.CoverImageUrl))
+                        {
+                            <img class="card-img" src="@t.CoverImageUrl" alt="@t.Title" />
+                        }
+                        else
+                        {
+                            <div class="card-img-placeholder">🎮</div>
+                        }
+                        <div class="card-overlay">
+                            <div class="card-overlay-top">
+                                <div class="card-user">
+                                    <div class="card-user-avatar">@creatorLetter</div>
+                                    <span>@creatorDisplay</span>
+                                </div>
+                                <div class="card-plays">▶ @itemCount</div>
+                            </div>
+                        </div>
+                        <div class="card-body-info">
+                            <div class="card-title">@t.Title</div>
+                            <div class="card-meta-row">
+                                @if (t.Category != null)
+                                {
+                                    <span class="card-category-badge">🏷️ @t.Category.Name</span>
+                                }
+                                <span>📊 @itemCount</span>
+                                <span>💬 @(t.Comments?.Count ?? 0)</span>
+                                <span>⭐ @avgRating (@ratingCount)</span>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+            <button class="slider-btn right" onclick="slide(this, 320)">›</button>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-icon">🏆</div>
+            <p>Henüz popüler turnuva yok.</p>
+        </div>
+    }
+
+    <!-- ==================== KATEGORİLER ==================== -->
+    @if (categories.Any())
+    {
+        <div class="category-bar">
+            <a href="/Tournaments" class="cat-chip active">🗂️ Tümü</a>
+            @foreach (var c in categories)
+            {
+                <a href="/Tournaments?categoryId=@c.Id" class="cat-chip">@c.Name</a>
+            }
+        </div>
+    }
+
+    <!-- ==================== ARAMA ==================== -->
+    <div class="home-search">
+        <form action="/Tournaments" method="get">
+            <input type="text" name="search" placeholder="🔍 Turnuva ara..." />
+        </form>
+    </div>
+
+    <!-- ==================== EN SON EKLENENLER ==================== -->
+    <div class="section-header">
+        <div>
+            <div class="section-title">
+                <span class="s-icon">🕐</span> En Son
+            </div>
+            <div class="section-subtitle">En son eklenen turnuvalar</div>
+        </div>
+        <a href="/Tournaments?sort=newest" class="see-all">Tümünü Gör <span>›</span></a>
+    </div>
+
+    @if (recentTournaments.Any())
+    {
+        <div class="slider-wrapper">
+            <button class="slider-btn left" onclick="slide(this, -300)">‹</button>
+            <div class="slider-track">
+                @foreach (var t in recentTournaments)
+                {
+                    var ratingCount2 = t.Ratings?.Count ?? 0;
+                    var avgRating2 = ratingCount2 > 0 ? t.Ratings!.Average(r => r.Score).ToString("0.0") : "0.0";
+                    var itemCount2 = t.Items?.Count ?? 0;
+                    var creatorDisplay2 = GetCreatorName(t, creatorNames);
+                    var creatorLetter2 = !string.IsNullOrEmpty(creatorDisplay2) ? creatorDisplay2[0].ToString().ToUpper() : "A";
+
+                    <a href="/t/@t.Slug" class="recent-card">
+                        @if (!string.IsNullOrWhiteSpace(t.CoverImageUrl))
+                        {
+                            <img class="card-img" src="@t.CoverImageUrl" alt="@t.Title" />
+                        }
+                        else
+                        {
+                            <div class="card-img-placeholder">🎮</div>
+                        }
+                        <div class="card-overlay">
+                            <div class="card-overlay-top">
+                                <div class="card-user">
+                                    <div class="card-user-avatar">@creatorLetter2</div>
+                                    <span>@creatorDisplay2</span>
+                                </div>
+                                <div class="card-plays">▶ @itemCount2</div>
+                            </div>
+                            <div style="display:flex; justify-content:flex-end;">
+                                <div class="card-rating">
+                                    <span class="star">☆</span> @avgRating2 (@ratingCount2)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body-info">
+                            <div class="card-title">@t.Title</div>
+                            <div class="card-meta-row">
+                                @if (t.Category != null)
+                                {
+                                    <span class="card-category-badge">🏷️ @t.Category.Name</span>
+                                }
+                                <span>📊 @itemCount2</span>
+                                <span>💬 @(t.Comments?.Count ?? 0)</span>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+            <button class="slider-btn right" onclick="slide(this, 300)">›</button>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-icon">🕐</div>
+            <p>Henüz yayınlanmış turnuva yok.</p>
+        </div>
+    }
+
+</div>
+
+<!-- SCROLL TO TOP BUTTON -->
+<button class="scroll-top-btn" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+@section Scripts {
+    <script>
+        // Slider kaydırma fonksiyonu
+        function slide(btn, amount) {
+            const wrapper = btn.parentElement;
+            const track = wrapper.querySelector('.slider-track');
+            track.scrollBy({ left: amount, behavior: 'smooth' });
+        }
+
+        // Scroll to top butonu göster/gizle
+        window.addEventListener('scroll', function () {
+            const btn = document.getElementById('scrollTopBtn');
+            if (window.scrollY > 300) {
+                btn.classList.add('visible');
+            } else {
+                btn.classList.remove('visible');
+            }
+        });
+    </script>
 }
-
-<!-- ARAMA -->
-<div class="mb-4 search-box">
-    <form action="/Tournaments" method="get">
-        <input type="text" name="search" class="form-control" placeholder="🔍 Turnuva ara..." />
-    </form>
-</div>
-
-<!-- SON TURNUVALAR -->
-<div class="section-title">🆕 Son Yayınlanan Turnuvalar</div>
-<div class="row g-3 mb-5">
-    @foreach (var t in tournaments.Take(8))
-    {
-        <div class="col-md-3 col-sm-6">
-            <a href="/t/@t.Slug" class="t-card">
-                @if (!string.IsNullOrWhiteSpace(t.CoverImageUrl))
-                {
-                    <img src="@t.CoverImageUrl" alt="@t.Title" />
-                }
-                else
-                {
-                    <div class="no-img">🎮</div>
-                }
-                <h5>@t.Title</h5>
-                <div class="desc">@(t.Description?.Length > 80 ? t.Description[..80] + "..." : t.Description)</div>
-                <div class="meta">@t.CreatedAt.ToString("dd MMM yyyy")</div>
-            </a>
-        </div>
-    }
-    @if (!tournaments.Any())
-    {
-        <div class="col-12">
-            <p class="text-center" style="color:rgba(233,236,255,0.5);">Henüz yayınlanmış turnuva yok.</p>
-        </div>
-    }
-</div>

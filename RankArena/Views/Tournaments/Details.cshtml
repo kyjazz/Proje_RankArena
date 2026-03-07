@@ -5,6 +5,8 @@
     ViewData["Title"] = Model.Tournament.Title;
     var t = Model.Tournament;
     var stats = ViewBag.Stats as RankArena.Models.ViewModels.TournamentStatsVm;
+    var creatorName = ViewBag.CreatorName as string ?? "Anonim";
+    var creatorInitial = !string.IsNullOrEmpty(creatorName) ? creatorName[0].ToString().ToUpper() : "A";
 }
 
 @functions {
@@ -353,29 +355,34 @@
         padding-bottom: 16px;
         border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-    .winner-card:last-child {
-        margin-bottom: 0;
-        padding-bottom: 0;
-        border-bottom: none;
-    }
+
+        .winner-card:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
     .winner-card-header {
         display: flex;
         align-items: flex-start;
         gap: 4px;
         margin-bottom: 8px;
     }
+
     .winner-rank {
         color: #ffb020;
         font-weight: 900;
         font-size: 1rem;
         min-width: 22px;
     }
+
     .winner-card-name {
         color: #e9ecff;
         font-weight: 700;
         font-size: 0.88rem;
         line-height: 1.3;
     }
+
     .winner-card-thumb {
         width: 100%;
         max-width: 160px;
@@ -387,6 +394,7 @@
         margin: 8px 0;
         background: rgba(255,255,255,0.03);
     }
+
     .winner-stat-row {
         display: flex;
         align-items: center;
@@ -395,14 +403,17 @@
         color: rgba(233,236,255,0.55);
         margin-bottom: 4px;
     }
-    .winner-stat-row .stat-label {
-        color: rgba(233,236,255,0.5);
-    }
-    .winner-stat-row .stat-value {
-        color: #e9ecff;
-        font-weight: 800;
-        font-size: 0.85rem;
-    }
+
+        .winner-stat-row .stat-label {
+            color: rgba(233,236,255,0.5);
+        }
+
+        .winner-stat-row .stat-value {
+            color: #e9ecff;
+            font-weight: 800;
+            font-size: 0.85rem;
+        }
+
     .winner-progress-bar {
         width: 100%;
         height: 5px;
@@ -411,16 +422,18 @@
         overflow: hidden;
         margin-top: 2px;
     }
-    .winner-progress-bar .fill-red {
-        height: 100%;
-        background: linear-gradient(90deg, #ff2d55, #ff5b3a);
-        border-radius: 999px;
-    }
-    .winner-progress-bar .fill-blue {
-        height: 100%;
-        background: linear-gradient(90deg, #2d7aff, #60a5fa);
-        border-radius: 999px;
-    }
+
+        .winner-progress-bar .fill-red {
+            height: 100%;
+            background: linear-gradient(90deg, #ff2d55, #ff5b3a);
+            border-radius: 999px;
+        }
+
+        .winner-progress-bar .fill-blue {
+            height: 100%;
+            background: linear-gradient(90deg, #2d7aff, #60a5fa);
+            border-radius: 999px;
+        }
 
     /* Eski winner-row ve stat-sub-panel (blind/tier için hala kullanılıyor) */
     .winner-row {
@@ -816,10 +829,10 @@
 
             <!-- Olusturan -->
             <div class="creator-box">
-                <div class="creator-avatar">A</div>
+                <div class="creator-avatar">@creatorInitial</div>
                 <div>
                     <div class="creator-label">Oluşturan</div>
-                    <div class="creator-name">Anonim</div>
+                    <div class="creator-name">@creatorName</div>
                 </div>
             </div>
 
@@ -836,7 +849,7 @@
                 @if (SignInManager.IsSignedIn(User))
                 {
                     <button class="rating-action-btn" onclick="toggleRatingPicker()">
-                        ⭐ @(Model.CurrentUserRating.HasValue ? "Puanını Güncelle" : "Puan Ver")
+                        ��� @(Model.CurrentUserRating.HasValue ? "Puanını Güncelle" : "Puan Ver")
                     </button>
                 }
                 else
@@ -994,12 +1007,13 @@
                                 <div class="stat-sub-panel">
                                     <h6>⚔️ Bracket - En Çok Kazananlar (@stats.TotalBracketRuns oyun)</h6>
 
-                                    @{ var bracketRank = 0; }
+                                    @{
+                                        var bracketRank = 0;
+                                    }
                                     @foreach (var item in stats.BracketTopWinners)
                                     {
                                         bracketRank++;
                                         var thumbUrl = GetItemThumb(item.ImageUrl, null);
-                                        // item'ın YouTubeVideoId'sini bulmak için tournament items'dan çek
                                         var tItem = t.Items.FirstOrDefault(x => x.Id == item.ItemId);
                                         if (thumbUrl == null && tItem != null)
                                         {
@@ -1043,7 +1057,9 @@
                                 <div class="stat-sub-panel">
                                     <h6>🎯 Blind - En İyi Sıra (@stats.TotalBlindRuns oyun)</h6>
 
-                                    @{ var blindRank = 0; }
+                                    @{
+                                        var blindRank = 0;
+                                    }
                                     @foreach (var item in stats.BlindTopItems)
                                     {
                                         blindRank++;
@@ -1079,7 +1095,9 @@
                                 <div class="stat-sub-panel">
                                     <h6>🏷️ Tier - En Çok S (@stats.TotalTierRuns oyun)</h6>
 
-                                    @{ var tierRank = 0; }
+                                    @{
+                                        var tierRank = 0;
+                                    }
                                     @foreach (var item in stats.TierTopItems)
                                     {
                                         tierRank++;
@@ -1118,7 +1136,7 @@
                     <form method="post" asp-controller="Tournaments" asp-action="AddComment" class="comment-form">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="tournamentId" value="@t.Id" />
-                        <textarea name="content" placeholder="Yorumunuzu yazın..." maxlength="1000" required></textarea>
+                        <textarea name="content" placeholder="Yorumunuzu yaz��n..." maxlength="1000" required></textarea>
                         <button type="submit" class="btn-comment-submit">Yorum Yap</button>
                     </form>
                 }

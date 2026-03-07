@@ -215,6 +215,16 @@ public class TournamentsController : Controller
 
         ViewBag.Stats = stats;
 
+        // ===== OLUŞTURAN KULLANICI ADINI BUL =====
+        string creatorName = "Anonim";
+        if (!string.IsNullOrEmpty(t.CreatedByUserId))
+        {
+            var creatorUser = await _userManager.FindByIdAsync(t.CreatedByUserId);
+            if (creatorUser != null)
+                creatorName = creatorUser.UserName ?? "Anonim";
+        }
+        ViewBag.CreatorName = creatorName;
+
         return View(vm);
     }
 
