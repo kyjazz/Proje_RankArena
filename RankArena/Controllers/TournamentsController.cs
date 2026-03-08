@@ -225,6 +225,10 @@ public class TournamentsController : Controller
         }
         ViewBag.CreatorName = creatorName;
 
+        // ===== GİRİŞ YAPAN KULLANICININ ID'Sİ (Yorum sil/düzenle için) =====
+        ViewBag.CurrentUserId = currentUser?.Id;
+        ViewBag.IsAdmin = currentUser != null && await _userManager.IsInRoleAsync(currentUser, "Admin");
+
         return View(vm);
     }
 
@@ -262,6 +266,75 @@ public class TournamentsController : Controller
         await _db.SaveChangesAsync();
 
         return Redirect($"/t/{t.Slug}#comments");
+    }
+
+    // POST: /Tournaments/DeleteComment
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteComment(int commentId)
+    {
+        var comment = await _db.TournamentComments
+            .Include(c => c.Tournament)
+            .FirstOrDefaultAsync(c => c.Id == commentId);
+
+        if (comment == null) return NotFound();
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Unauthorized();
+
+        var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+
+        // Sadece kendi yorumunu silebilir VEYA admin herkesin yorumunu silebilir
+        if (comment.UserId != user.Id && !isAdmin)
+        {
+            TempData["Error"] = "Bu yorumu silme yetkiniz yok.";
+            return Redirect($"/t/{comment.Tournament.Slug}#comments");
+        }
+
+        var slug = comment.Tournament.Slug;
+
+        _db.TournamentComments.Remove(comment);
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = "Yorum silindi.";
+        return Redirect($"/t/{slug}#comments");
+    }
+
+    // POST: /Tournaments/EditComment
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditComment(int commentId, string content)
+    {
+        var comment = await _db.TournamentComments
+            .Include(c => c.Tournament)
+            .FirstOrDefaultAsync(c => c.Id == commentId);
+
+        if (comment == null) return NotFound();
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Unauthorized();
+
+        // Sadece kendi yorumunu düzenleyebilir
+        if (comment.UserId != user.Id)
+        {
+            TempData["Error"] = "Bu yorumu düzenleme yetkiniz yok.";
+            return Redirect($"/t/{comment.Tournament.Slug}#comments");
+        }
+
+        if (string.IsNullOrWhiteSpace(content) || content.Length > 1000)
+        {
+            TempData["Error"] = "Yorum 1-1000 karakter arasında olmalıdır.";
+            return Redirect($"/t/{comment.Tournament.Slug}#comments");
+        }
+
+        comment.Content = content.Trim();
+        _db.TournamentComments.Update(comment);
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = "Yorum güncellendi.";
+        return Redirect($"/t/{comment.Tournament.Slug}#comments");
     }
 
     // POST: /Tournaments/RateTournament

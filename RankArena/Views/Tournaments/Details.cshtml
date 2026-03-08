@@ -7,6 +7,8 @@
     var stats = ViewBag.Stats as RankArena.Models.ViewModels.TournamentStatsVm;
     var creatorName = ViewBag.CreatorName as string ?? "Anonim";
     var creatorInitial = !string.IsNullOrEmpty(creatorName) ? creatorName[0].ToString().ToUpper() : "A";
+    var currentUserId = ViewBag.CurrentUserId as string;
+    var isAdmin = (bool)(ViewBag.IsAdmin ?? false);
 }
 
 @functions {
@@ -20,14 +22,12 @@
 }
 
 <style>
-    /* ========== GENEL ========== */
     .details-page {
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px 16px;
     }
 
-    /* ========== ÜST BADGE ========== */
     .top-badge {
         display: inline-flex;
         align-items: center;
@@ -42,7 +42,6 @@
         margin-bottom: 16px;
     }
 
-    /* ========== ANA LAYOUT: SOL + ORTA + SAĞ ========== */
     .detail-grid {
         display: grid;
         grid-template-columns: 320px 1fr 340px;
@@ -50,13 +49,12 @@
         align-items: start;
     }
 
-    @@media (max-width: 1100px) {
+    @@media (max-width:1100px) {
         .detail-grid {
             grid-template-columns: 1fr;
         }
     }
 
-    /* ========== SOL KOLON ========== */
     .left-col .cover-img {
         width: 100%;
         aspect-ratio: 3/4;
@@ -85,7 +83,7 @@
         width: 100%;
         margin-top: 14px;
         padding: 16px;
-        background: linear-gradient(135deg, #ff6b35, #ff4500);
+        background: linear-gradient(135deg,#ff6b35,#ff4500);
         color: #fff;
         font-weight: 800;
         font-size: 1.1rem;
@@ -97,14 +95,13 @@
     }
 
         .btn-play-big:hover {
-            background: linear-gradient(135deg, #ff4500, #ff6b35);
+            background: linear-gradient(135deg,#ff4500,#ff6b35);
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(255,69,0,0.35);
             color: #fff;
             text-decoration: none;
         }
 
-    /* ========== ORTA KOLON ========== */
     .center-col h1 {
         color: #e9ecff;
         font-weight: 900;
@@ -182,7 +179,6 @@
         font-size: 0.95rem;
     }
 
-    /* Meta bilgiler */
     .meta-row {
         display: flex;
         flex-wrap: wrap;
@@ -207,7 +203,6 @@
             font-weight: 700;
         }
 
-    /* Oyun modlari kartlari */
     .modes-section h4 {
         color: #e9ecff;
         font-weight: 800;
@@ -217,7 +212,7 @@
 
     .mode-cards {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
         gap: 12px;
         margin-bottom: 20px;
     }
@@ -267,7 +262,6 @@
                 text-decoration: none;
             }
 
-    /* ========== SAG KOLON ========== */
     .right-col section {
         background: rgba(255,255,255,0.03);
         border: 1px solid rgba(255,255,255,0.08);
@@ -286,7 +280,6 @@
         gap: 8px;
     }
 
-    /* ========== SPOILER GIZLEME ========== */
     .spoiler-wrapper {
         position: relative;
     }
@@ -349,7 +342,6 @@
             color: #070b1a;
         }
 
-    /* ========== KAZANAN SEÇIMLER - QUİZEİ TARZI ========== */
     .winner-card {
         margin-bottom: 16px;
         padding-bottom: 16px;
@@ -425,17 +417,16 @@
 
         .winner-progress-bar .fill-red {
             height: 100%;
-            background: linear-gradient(90deg, #ff2d55, #ff5b3a);
+            background: linear-gradient(90deg,#ff2d55,#ff5b3a);
             border-radius: 999px;
         }
 
         .winner-progress-bar .fill-blue {
             height: 100%;
-            background: linear-gradient(90deg, #2d7aff, #60a5fa);
+            background: linear-gradient(90deg,#2d7aff,#60a5fa);
             border-radius: 999px;
         }
 
-    /* Eski winner-row ve stat-sub-panel (blind/tier için hala kullanılıyor) */
     .winner-row {
         display: flex;
         justify-content: space-between;
@@ -470,7 +461,6 @@
             margin-bottom: 8px;
         }
 
-    /* ========== YORUM BOLUMU ========== */
     .comment-box {
         background: rgba(255,255,255,0.03);
         border: 1px solid rgba(255,255,255,0.08);
@@ -596,7 +586,191 @@
         padding-left: 42px;
     }
 
-    /* ========== PUAN (RATING) SISTEMI ========== */
+    .comment-actions {
+        display: flex;
+        gap: 8px;
+        padding-left: 42px;
+        margin-top: 6px;
+    }
+
+    .btn-comment-action {
+        background: none;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: rgba(233,236,255,0.5);
+        font-size: 0.72rem;
+        padding: 3px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all .15s;
+    }
+
+        .btn-comment-action:hover {
+            border-color: #ffb020;
+            color: #ffb020;
+        }
+
+    .btn-comment-delete {
+        background: none;
+        border: 1px solid rgba(255,100,100,0.2);
+        color: rgba(255,100,100,0.6);
+        font-size: 0.72rem;
+        padding: 3px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all .15s;
+    }
+
+        .btn-comment-delete:hover {
+            border-color: #ff4444;
+            color: #ff4444;
+            background: rgba(255,68,68,0.08);
+        }
+
+    .comment-edit-form {
+        display: none;
+        padding-left: 42px;
+        margin-top: 8px;
+    }
+
+        .comment-edit-form.active {
+            display: block;
+        }
+
+        .comment-edit-form textarea {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,176,32,0.3);
+            border-radius: 8px;
+            color: #e9ecff;
+            padding: 10px;
+            font-size: 0.82rem;
+            resize: vertical;
+            min-height: 60px;
+            margin-bottom: 8px;
+        }
+
+            .comment-edit-form textarea:focus {
+                outline: none;
+                border-color: #ffb020;
+            }
+
+    .comment-edit-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-edit-save {
+        background: #ffb020;
+        color: #070b1a;
+        font-weight: 700;
+        border: none;
+        padding: 5px 16px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        transition: all .15s;
+    }
+
+        .btn-edit-save:hover {
+            background: #ffc040;
+        }
+
+    .btn-edit-cancel {
+        background: none;
+        border: 1px solid rgba(255,255,255,0.15);
+        color: rgba(233,236,255,0.6);
+        font-weight: 600;
+        padding: 5px 16px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        transition: all .15s;
+    }
+
+        .btn-edit-cancel:hover {
+            border-color: rgba(255,255,255,0.3);
+            color: #e9ecff;
+        }
+
+    .delete-confirm-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .delete-confirm-overlay.active {
+            display: flex;
+        }
+
+    .delete-confirm-box {
+        background: #0f1428;
+        border: 1px solid rgba(255,100,100,0.3);
+        border-radius: 16px;
+        padding: 28px;
+        max-width: 380px;
+        width: 90%;
+        text-align: center;
+    }
+
+        .delete-confirm-box h6 {
+            color: #e9ecff;
+            font-weight: 800;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .delete-confirm-box p {
+            color: rgba(233,236,255,0.6);
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+    .delete-confirm-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+    }
+
+    .btn-confirm-delete {
+        background: #ff4444;
+        color: #fff;
+        font-weight: 700;
+        border: none;
+        padding: 8px 24px;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all .15s;
+    }
+
+        .btn-confirm-delete:hover {
+            background: #ff2222;
+        }
+
+    .btn-confirm-cancel {
+        background: none;
+        border: 1px solid rgba(255,255,255,0.15);
+        color: rgba(233,236,255,0.7);
+        font-weight: 600;
+        padding: 8px 24px;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all .15s;
+    }
+
+        .btn-confirm-cancel:hover {
+            border-color: rgba(255,255,255,0.3);
+            color: #e9ecff;
+        }
+
     .rating-box {
         display: flex;
         align-items: center;
@@ -702,8 +876,7 @@
         padding: 2px 4px;
     }
 
-        .star-btn:hover,
-        .star-btn.active {
+        .star-btn:hover, .star-btn.active {
             color: #ffb020;
             transform: scale(1.15);
         }
@@ -771,18 +944,13 @@
 {
     <div class="alert alert-danger">@TempData["Error"]</div>
 }
-
 @if (TempData["Success"] != null)
 {
     <div class="alert-success-custom">@TempData["Success"]</div>
 }
 
 <div class="details-page">
-
-    <!-- UST BADGE -->
     <div class="top-badge">🏆 Turnuva</div>
-
-    <!-- ANA GRID -->
     <div class="detail-grid">
 
         <!-- ========== SOL KOLON ========== -->
@@ -795,39 +963,28 @@
             {
                 <div class="no-cover">🎮</div>
             }
-
             @if (Model.ActiveItemCount >= 2)
             {
-                <a href="/Play/Start?slug=@t.Slug&mode=bracket&value=8" class="btn-play-big">
-                    ▶ OYNA
-                </a>
+                <a href="/Play/Start?slug=@t.Slug&mode=bracket&value=8" class="btn-play-big">▶ OYNA</a>
             }
             else
             {
-                <div class="btn-play-big" style="opacity:0.4;cursor:not-allowed;">
-                    ▶ OYNA (en az 2 item gerekli)
-                </div>
+                <div class="btn-play-big" style="opacity:0.4;cursor:not-allowed;">▶ OYNA (en az 2 item gerekli)</div>
             }
         </div>
 
         <!-- ========== ORTA KOLON ========== -->
         <div class="center-col">
             <h1>@t.Title</h1>
-
-            <!-- Mod Etiketleri -->
             <div class="mode-tags">
                 <a href="/Play/Start?slug=@t.Slug&mode=bracket&value=8" class="mode-tag">Turnuva Ağacı</a>
                 <a href="/Play/Start?slug=@t.Slug&mode=blind&value=5" class="mode-tag">Kör Sıralama</a>
                 <a href="/Play/Start?slug=@t.Slug&mode=tier" class="mode-tag">Tier List</a>
             </div>
-
-            <!-- Aciklama -->
             @if (!string.IsNullOrWhiteSpace(t.Description))
             {
                 <div class="detail-desc">@t.Description</div>
             }
-
-            <!-- Olusturan -->
             <div class="creator-box">
                 <div class="creator-avatar">@creatorInitial</div>
                 <div>
@@ -836,7 +993,7 @@
                 </div>
             </div>
 
-            <!-- ===== PUAN (RATING) BOLUMU ===== -->
+            <!-- PUAN -->
             <div class="rating-box">
                 <div class="rating-display">
                     <span class="rating-star-icon">⭐</span>
@@ -845,22 +1002,17 @@
                 </div>
                 <span class="rating-dot">·</span>
                 <span class="rating-count">@Model.TotalRatingCount oy</span>
-
                 @if (SignInManager.IsSignedIn(User))
                 {
                     <button class="rating-action-btn" onclick="toggleRatingPicker()">
-                        ��� @(Model.CurrentUserRating.HasValue ? "Puanını Güncelle" : "Puan Ver")
+                        💎 @(Model.CurrentUserRating.HasValue ? "Puanını Güncelle" : "Puan Ver")
                     </button>
                 }
                 else
                 {
-                    <a href="/Identity/Account/Login" class="rating-action-btn" style="text-decoration:none;">
-                        ⭐ Puan Ver
-                    </a>
+                    <a href="/Identity/Account/Login" class="rating-action-btn" style="text-decoration:none;">⭐ Puan Ver</a>
                 }
             </div>
-
-            <!-- Puan Secici (Giris yapan kullanicilar icin) -->
             @if (SignInManager.IsSignedIn(User))
             {
                 <div class="rating-picker" id="ratingPicker">
@@ -869,14 +1021,7 @@
                         @for (int i = 1; i <= 10; i++)
                         {
                             var starClass = Model.CurrentUserRating.HasValue && i <= Model.CurrentUserRating.Value ? "active" : "";
-                            <button type="button"
-                                    class="star-btn @starClass"
-                                    data-value="@i"
-                                    onclick="selectRating(@i)"
-                                    onmouseenter="hoverRating(@i)"
-                                    onmouseleave="unhoverRating()">
-                                ★
-                            </button>
+                            <button type="button" class="star-btn @starClass" data-value="@i" onclick="selectRating(@i)" onmouseenter="hoverRating(@i)" onmouseleave="unhoverRating()">★</button>
                         }
                     </div>
                     <div class="rating-selected-text" id="ratingText">
@@ -893,44 +1038,30 @@
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="tournamentId" value="@t.Id" />
                         <input type="hidden" name="score" id="ratingScoreInput" value="@(Model.CurrentUserRating ?? 0)" />
-                        <button type="submit" class="btn-submit-rating" id="btnSubmitRating"
-                        @(Model.CurrentUserRating.HasValue ? "" : "disabled")>
+                        <button type="submit" class="btn-submit-rating" id="btnSubmitRating" @(Model.CurrentUserRating.HasValue ? "" : "disabled")>
                             @(Model.CurrentUserRating.HasValue ? "Puanı Güncelle" : "Puanı Gönder")
                         </button>
                     </form>
                 </div>
             }
 
-            <!-- Meta Bilgiler -->
+            <!-- META -->
             <div class="meta-row">
-                <div class="meta-item">
-                    🔥 <span class="val">@Model.TotalPlayCount</span> oynanma
-                </div>
-                <div class="meta-item">
-                    🎮 <span class="val">Oyun</span>
-                </div>
-                <div class="meta-item">
-                    📋 <span class="val">@Model.TotalItemCount</span> seçim
-                </div>
-                <div class="meta-item">
-                    💬 <span class="val">@Model.CommentCount</span> yorum
-                </div>
-                <div class="meta-item">
-                    📅 @t.CreatedAt.ToString("dd MMM yyyy")
-                </div>
+                <div class="meta-item">🔥 <span class="val">@Model.TotalPlayCount</span> oynanma</div>
+                <div class="meta-item">🎮 <span class="val">Oyun</span></div>
+                <div class="meta-item">📋 <span class="val">@Model.TotalItemCount</span> seçim</div>
+                <div class="meta-item">💬 <span class="val">@Model.CommentCount</span> yorum</div>
+                <div class="meta-item">📅 @t.CreatedAt.ToString("dd MMM yyyy")</div>
                 @if (t.Category != null)
                 {
-                    <div class="meta-item">
-                        📂 <span class="val">@t.Category.Name</span>
-                    </div>
+                    <div class="meta-item">📂 <span class="val">@t.Category.Name</span></div>
                 }
             </div>
 
-            <!-- Oyun Modlari Kartlari -->
+            <!-- OYUN MODLARI -->
             <div class="modes-section">
                 <h4>🎮 Oyun Modu Seç</h4>
                 <div class="mode-cards">
-                    <!-- BRACKET -->
                     <div class="mode-card-v2">
                         <h6>⚔️ Turnuva Ağacı</h6>
                         <p>Eleme usulü VS turnuvası. 2 seçenekten birini seç, şampiyonu belirle!</p>
@@ -948,8 +1079,6 @@
                             <span style="color:rgba(255,100,100,0.7);font-size:0.75rem;">En az 2 aktif item gerekli.</span>
                         }
                     </div>
-
-                    <!-- BLIND -->
                     <div class="mode-card-v2">
                         <h6>🎯 Kör Sıralama</h6>
                         <p>Rastgele gelen item'ları sıralama slotlarına yerleştir. Kilitli slot!</p>
@@ -967,8 +1096,6 @@
                             <span style="color:rgba(255,100,100,0.7);font-size:0.75rem;">En az 2 aktif item gerekli.</span>
                         }
                     </div>
-
-                    <!-- TIER -->
                     <div class="mode-card-v2">
                         <h6>🏷️ Tier List</h6>
                         <p>Tüm item'ları S/A/B/C/D tier'larına yerleştir veya pas geç!</p>
@@ -988,25 +1115,21 @@
         <!-- ========== SAĞ KOLON ========== -->
         <div class="right-col">
 
-            <!-- KAZANAN SECIMLER (SPOILER) - QUİZEİ TARZI RESİMLİ -->
+            <!-- KAZANAN SECIMLER -->
             @if (stats != null && (stats.TotalBracketRuns > 0 || stats.TotalBlindRuns > 0 || stats.TotalTierRuns > 0))
             {
                 <section>
                     <h5>🏆 Kazanan Seçimler</h5>
-
                     <div class="spoiler-wrapper">
                         <div class="spoiler-overlay" id="spoilerOverlay">
                             <p>Spoileri önlemek için<br />seçimler gizlenmiştir.</p>
                             <button class="btn-reveal" onclick="revealSpoiler()">👁 SEÇİMLERİ GÖSTER</button>
                         </div>
-
                         <div class="spoiler-content" id="spoilerContent">
-
                             @if (stats.BracketTopWinners.Any())
                             {
                                 <div class="stat-sub-panel">
                                     <h6>⚔️ Bracket - En Çok Kazananlar (@stats.TotalBracketRuns oyun)</h6>
-
                                     @{
                                         var bracketRank = 0;
                                     }
@@ -1015,48 +1138,29 @@
                                         bracketRank++;
                                         var thumbUrl = GetItemThumb(item.ImageUrl, null);
                                         var tItem = t.Items.FirstOrDefault(x => x.Id == item.ItemId);
-                                        if (thumbUrl == null && tItem != null)
-                                        {
-                                            thumbUrl = GetItemThumb(tItem.ImageUrl, tItem.YouTubeVideoId);
-                                        }
+                                        if (thumbUrl == null && tItem != null) { thumbUrl = GetItemThumb(tItem.ImageUrl, tItem.YouTubeVideoId); }
                                         var champPercent = stats.TotalBracketRuns == 0 ? 0 : (int)Math.Round(item.WinCount * 100.0 / stats.TotalBracketRuns);
-
                                         <div class="winner-card">
                                             <div class="winner-card-header">
                                                 <span class="winner-rank">@bracketRank.</span>
                                                 <span class="winner-card-name">@item.ItemName</span>
                                             </div>
-
                                             @if (thumbUrl != null)
                                             {
                                                 <img src="@thumbUrl" alt="@item.ItemName" class="winner-card-thumb" />
                                             }
-
-                                            <div class="winner-stat-row">
-                                                <span class="stat-label">Şampiyonluk Oranı:</span>
-                                                <span class="stat-value">% @champPercent</span>
-                                            </div>
-                                            <div class="winner-progress-bar">
-                                                <div class="fill-red" style="width: @(champPercent)%;"></div>
-                                            </div>
-
-                                            <div class="winner-stat-row" style="margin-top:8px;">
-                                                <span class="stat-label">Kazanma Oranı:</span>
-                                                <span class="stat-value">% @item.WinRate</span>
-                                            </div>
-                                            <div class="winner-progress-bar">
-                                                <div class="fill-blue" style="width: @(item.WinRate)%;"></div>
-                                            </div>
+                                            <div class="winner-stat-row"><span class="stat-label">Şampiyonluk Oranı:</span><span class="stat-value">% @champPercent</span></div>
+                                            <div class="winner-progress-bar"><div class="fill-red" style="width: @(champPercent)%;"></div></div>
+                                            <div class="winner-stat-row" style="margin-top:8px;"><span class="stat-label">Kazanma Oranı:</span><span class="stat-value">% @item.WinRate</span></div>
+                                            <div class="winner-progress-bar"><div class="fill-blue" style="width: @(item.WinRate)%;"></div></div>
                                         </div>
                                     }
                                 </div>
                             }
-
                             @if (stats.BlindTopItems.Any())
                             {
                                 <div class="stat-sub-panel">
                                     <h6>🎯 Blind - En İyi Sıra (@stats.TotalBlindRuns oyun)</h6>
-
                                     @{
                                         var blindRank = 0;
                                     }
@@ -1065,36 +1169,22 @@
                                         blindRank++;
                                         var tItemB = t.Items.FirstOrDefault(x => x.Id == item.ItemId);
                                         var thumbUrlB = GetItemThumb(item.ImageUrl, tItemB?.YouTubeVideoId);
-
                                         <div class="winner-card">
-                                            <div class="winner-card-header">
-                                                <span class="winner-rank">@blindRank.</span>
-                                                <span class="winner-card-name">@item.ItemName</span>
-                                            </div>
-
+                                            <div class="winner-card-header"><span class="winner-rank">@blindRank.</span><span class="winner-card-name">@item.ItemName</span></div>
                                             @if (thumbUrlB != null)
                                             {
                                                 <img src="@thumbUrlB" alt="@item.ItemName" class="winner-card-thumb" />
                                             }
-
-                                            <div class="winner-stat-row">
-                                                <span class="stat-label">Ort. Sıra:</span>
-                                                <span class="stat-value">@item.AveragePosition</span>
-                                            </div>
-                                            <div class="winner-stat-row">
-                                                <span class="stat-label">1. Seçilme:</span>
-                                                <span class="stat-value">@item.FirstPlaceCount</span>
-                                            </div>
+                                            <div class="winner-stat-row"><span class="stat-label">Ort. Sıra:</span><span class="stat-value">@item.AveragePosition</span></div>
+                                            <div class="winner-stat-row"><span class="stat-label">1. Seçilme:</span><span class="stat-value">@item.FirstPlaceCount</span></div>
                                         </div>
                                     }
                                 </div>
                             }
-
                             @if (stats.TierTopItems.Any())
                             {
                                 <div class="stat-sub-panel">
                                     <h6>🏷️ Tier - En Çok S (@stats.TotalTierRuns oyun)</h6>
-
                                     @{
                                         var tierRank = 0;
                                     }
@@ -1103,21 +1193,13 @@
                                         tierRank++;
                                         var tItemT = t.Items.FirstOrDefault(x => x.Id == item.ItemId);
                                         var thumbUrlT = GetItemThumb(item.ImageUrl, tItemT?.YouTubeVideoId);
-
                                         <div class="winner-card">
-                                            <div class="winner-card-header">
-                                                <span class="winner-rank">@tierRank.</span>
-                                                <span class="winner-card-name">@item.ItemName</span>
-                                            </div>
-
+                                            <div class="winner-card-header"><span class="winner-rank">@tierRank.</span><span class="winner-card-name">@item.ItemName</span></div>
                                             @if (thumbUrlT != null)
                                             {
                                                 <img src="@thumbUrlT" alt="@item.ItemName" class="winner-card-thumb" />
                                             }
-
-                                            <div class="winner-stat-row">
-                                                <span class="stat-label">S:@item.STierCount A:@item.ATierCount B:@item.BTierCount</span>
-                                            </div>
+                                            <div class="winner-stat-row"><span class="stat-label">S:@item.STierCount A:@item.ATierCount B:@item.BTierCount</span></div>
                                         </div>
                                     }
                                 </div>
@@ -1127,7 +1209,7 @@
                 </section>
             }
 
-            <!-- YORUMLAR -->
+            <!-- ========== YORUMLAR ========== -->
             <section class="comment-box" id="comments">
                 <h5>💬 Yorumlar (@Model.CommentCount)</h5>
 
@@ -1136,7 +1218,7 @@
                     <form method="post" asp-controller="Tournaments" asp-action="AddComment" class="comment-form">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="tournamentId" value="@t.Id" />
-                        <textarea name="content" placeholder="Yorumunuzu yaz��n..." maxlength="1000" required></textarea>
+                        <textarea name="content" placeholder="Yorumunuzu yazın..." maxlength="1000" required></textarea>
                         <button type="submit" class="btn-comment-submit">Yorum Yap</button>
                     </form>
                 }
@@ -1154,7 +1236,10 @@
                     <div style="margin-top:16px;">
                         @foreach (var comment in Model.Comments)
                         {
-                            <div class="comment-item">
+                            var isOwner = currentUserId != null && comment.UserId == currentUserId;
+                            var canDelete = isOwner || isAdmin;
+
+                            <div class="comment-item" id="comment-@comment.Id">
                                 <div class="comment-header">
                                     <div class="comment-avatar">@comment.UserName[0].ToString().ToUpper()</div>
                                     <div>
@@ -1162,12 +1247,43 @@
                                         <div class="comment-date">@comment.CreatedAt.ToString("dd MMM yyyy HH:mm")</div>
                                     </div>
                                 </div>
-                                <div class="comment-text">@comment.Content</div>
+                                <div class="comment-text" id="comment-text-@comment.Id">@comment.Content</div>
+
+                                <!-- YORUM AKSIYON BUTONLARI -->
+                                @if (canDelete || isOwner)
+                                {
+                                    <div class="comment-actions">
+                                        @if (isOwner)
+                                        {
+                                            <button type="button" class="btn-comment-action" onclick="toggleEditForm(@comment.Id)">✏️ Düzenle</button>
+                                        }
+                                        @if (canDelete)
+                                        {
+                                            <button type="button" class="btn-comment-delete" onclick="showDeleteConfirm(@comment.Id)">🗑️ Sil</button>
+                                        }
+                                    </div>
+                                }
+
+                                <!-- DÜZENLEME FORMU (gizli) -->
+                                @if (isOwner)
+                                {
+                                    <div class="comment-edit-form" id="edit-form-@comment.Id">
+                                        <form method="post" asp-controller="Tournaments" asp-action="EditComment">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="commentId" value="@comment.Id" />
+                                            <textarea name="content" maxlength="1000" required>@comment.Content</textarea>
+                                            <div class="comment-edit-actions">
+                                                <button type="submit" class="btn-edit-save">💾 Kaydet</button>
+                                                <button type="button" class="btn-edit-cancel" onclick="toggleEditForm(@comment.Id)">İptal</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                }
                             </div>
                         }
                     </div>
                 }
-                else if (!Model.Comments.Any())
+                else
                 {
                     <div style="text-align:center;padding:20px;color:rgba(233,236,255,0.35);font-size:0.85rem;">
                         Henüz yorum yapılmamış. İlk yorumu sen yap!
@@ -1179,6 +1295,22 @@
     </div>
 </div>
 
+<!-- SİLME ONAY MODALI -->
+<div class="delete-confirm-overlay" id="deleteConfirmOverlay">
+    <div class="delete-confirm-box">
+        <h6>🗑️ Yorumu Sil</h6>
+        <p>Bu yorumu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.</p>
+        <div class="delete-confirm-actions">
+            <form method="post" asp-controller="Tournaments" asp-action="DeleteComment" id="deleteCommentForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="commentId" id="deleteCommentId" value="0" />
+                <button type="submit" class="btn-confirm-delete">Evet, Sil</button>
+            </form>
+            <button type="button" class="btn-confirm-cancel" onclick="hideDeleteConfirm()">İptal</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // Spoiler
     function revealSpoiler() {
@@ -1186,15 +1318,12 @@
         document.getElementById('spoilerOverlay').classList.add('hidden');
     }
 
-    // Rating Picker Ac/Kapa
+    // Rating
     function toggleRatingPicker() {
         var picker = document.getElementById('ratingPicker');
-        if (picker) {
-            picker.classList.toggle('show');
-        }
+        if (picker) picker.classList.toggle('show');
     }
 
-    // Secilen puan
     var selectedRating = @(Model.CurrentUserRating ?? 0);
 
     function selectRating(value) {
@@ -1203,16 +1332,10 @@
         document.getElementById('ratingText').textContent = 'Seçilen puan: ' + value + '/10';
         document.getElementById('btnSubmitRating').disabled = false;
         document.getElementById('btnSubmitRating').textContent = 'Puanı Gönder';
-
-        // Yildizlari guncelle
         var stars = document.querySelectorAll('#ratingStars .star-btn');
         stars.forEach(function (star) {
             var starVal = parseInt(star.getAttribute('data-value'));
-            if (starVal <= value) {
-                star.classList.add('active');
-            } else {
-                star.classList.remove('active');
-            }
+            star.classList.toggle('active', starVal <= value);
         });
     }
 
@@ -1220,18 +1343,28 @@
         var stars = document.querySelectorAll('#ratingStars .star-btn');
         stars.forEach(function (star) {
             var starVal = parseInt(star.getAttribute('data-value'));
-            if (starVal <= value) {
-                star.classList.add('hovered');
-            } else {
-                star.classList.remove('hovered');
-            }
+            star.classList.toggle('hovered', starVal <= value);
         });
     }
 
     function unhoverRating() {
         var stars = document.querySelectorAll('#ratingStars .star-btn');
-        stars.forEach(function (star) {
-            star.classList.remove('hovered');
-        });
+        stars.forEach(function (star) { star.classList.remove('hovered'); });
+    }
+
+    // Yorum Düzenleme
+    function toggleEditForm(commentId) {
+        var form = document.getElementById('edit-form-' + commentId);
+        if (form) form.classList.toggle('active');
+    }
+
+    // Yorum Silme Onay
+    function showDeleteConfirm(commentId) {
+        document.getElementById('deleteCommentId').value = commentId;
+        document.getElementById('deleteConfirmOverlay').classList.add('active');
+    }
+
+    function hideDeleteConfirm() {
+        document.getElementById('deleteConfirmOverlay').classList.remove('active');
     }
 </script>
