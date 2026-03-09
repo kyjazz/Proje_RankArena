@@ -225,4 +225,71 @@ public class MyTournamentsController : Controller
         TempData["Success"] = "Item silindi. Turnuva yeniden onaya gönderildi.";
         return RedirectToAction(nameof(Edit), new { id = tournamentId });
     }
+
+    // =============================================
+    // POST: /MyTournaments/Delete/5
+    // Kullanıcı sadece KENDİ turnuvasını silebilir
+    // =============================================
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var userId = _userManager.GetUserId(User);
+
+        var t = await _db.Tournaments
+            .Include(x => x.Items)
+            .Include(x => x.Comments)
+            .Include(x => x.Ratings)
+            .FirstOrDefaultAsync(x => x.Id == id && x.CreatedByUserId == userId);
+
+        if (t == null)
+        {
+            TempData["Error"] = "Turnuva bulunamadı veya silme yetkiniz yok.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // İlişkili Run'ları ve alt verilerini sil
+        var runs = await _db.Runs.Where(r => r.TournamentId == t.Id).ToListAsync();
+        var runIds = runs.Select(r => r.Id).ToList();
+
+        if (runIds.Any())
+        {
+            // Bracket
+            var bracketMatches = await _db.BracketMatches.Where(x => runIds.Contains(x.RunId)).ToListAsync();
+            var matchIds = bracketMatches.Select(m => m.Id).ToList();
+            if (matchIds.Any())
+            {
+                var bracketVotes = await _db.BracketVotes.Where(x => matchIds.Contains(x.MatchId)).ToListAsync();
+                _db.BracketVotes.RemoveRange(bracketVotes);
+            }
+            _db.BracketMatches.RemoveRange(bracketMatches);
+
+            // Blind
+            var blindRunItems = await _db.BlindRunItems.Where(x => runIds.Contains(x.RunId)).ToListAsync();
+            _db.BlindRunItems.RemoveRange(blindRunItems);
+            var blindSlots = await _db.BlindSlots.Where(x => runIds.Contains(x.RunId)).ToListAsync();
+            _db.BlindSlots.RemoveRange(blindSlots);
+            var blindPicks = await _db.BlindPicks.Where(x => runIds.Contains(x.RunId)).ToListAsync();
+            _db.BlindPicks.RemoveRange(blindPicks);
+
+            // Tier
+            var tierRunItems = await _db.TierRunItems.Where(x => runIds.Contains(x.RunId)).ToListAsync();
+            _db.TierRunItems.RemoveRange(tierRunItems);
+            var tierSlots = await _db.TierSlots.Where(x => runIds.Contains(x.RunId)).ToListAsync();
+            _db.TierSlots.RemoveRange(tierSlots);
+            var tierPicks = await _db.TierPicks.Where(x => runIds.Contains(x.RunId)).ToListAsync();
+            _db.TierPicks.RemoveRange(tierPicks);
+            var tierSkips = await _db.TierSkips.Where(x => runIds.Contains(x.RunId)).ToListAsync();
+            _db.TierSkips.RemoveRange(tierSkips);
+
+            _db.Runs.RemoveRange(runs);
+        }
+
+        // Tournament kendisi (Items, Comments, Ratings cascade ile silinir ama emin olmak için)
+        _db.Tournaments.Remove(t);
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = "Turnuva başarıyla silindi. 🗑️";
+        return RedirectToAction(nameof(Index));
+    }
 }
