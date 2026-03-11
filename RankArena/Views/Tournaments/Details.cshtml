@@ -262,6 +262,7 @@
                 text-decoration: none;
             }
 
+    /* ========== SAĞ KOLON ========== */
     .right-col section {
         background: rgba(255,255,255,0.03);
         border: 1px solid rgba(255,255,255,0.08);
@@ -427,29 +428,6 @@
             border-radius: 999px;
         }
 
-    .winner-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-        font-size: 0.83rem;
-    }
-
-        .winner-row:last-child {
-            border-bottom: none;
-        }
-
-    .winner-name {
-        color: #e9ecff;
-        font-weight: 600;
-    }
-
-    .winner-stat {
-        color: rgba(233,236,255,0.5);
-        font-size: 0.78rem;
-    }
-
     .stat-sub-panel {
         margin-top: 12px;
     }
@@ -460,6 +438,58 @@
             font-size: 0.8rem;
             margin-bottom: 8px;
         }
+
+    /* ========== DAHA FAZLA YÜKLE ========== */
+    .load-more-wrapper {
+        text-align: center;
+        margin-top: 16px;
+    }
+
+    .btn-load-more {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: none;
+        border: 2px solid rgba(255,176,32,0.35);
+        color: #ffb020;
+        font-weight: 800;
+        font-size: 0.82rem;
+        padding: 10px 28px;
+        border-radius: 10px;
+        cursor: pointer;
+        letter-spacing: 0.5px;
+        font-family: monospace;
+        transition: all .2s;
+    }
+
+        .btn-load-more:hover {
+            background: rgba(255,176,32,0.10);
+            border-color: #ffb020;
+        }
+
+    /* İlk 3'ten sonraki kartları gizle */
+    .winner-card.hidden-card {
+        display: none;
+    }
+
+        .winner-card.hidden-card.show-card {
+            display: block;
+        }
+
+    /* Gizli sub-panel (tüm Blind/Tier bölümü gizli başlar) */
+    .stat-sub-panel.collapsed-section {
+        display: none;
+    }
+
+        .stat-sub-panel.collapsed-section.show-section {
+            display: block;
+        }
+
+    /* ========== YORUMLAR (Turnuva altında ortada, grid'e yakın) ========== */
+    .comments-section-center {
+        max-width: 800px;
+        margin: 24px auto 0;
+    }
 
     .comment-box {
         background: rgba(255,255,255,0.03);
@@ -1114,8 +1144,6 @@
 
         <!-- ========== SAĞ KOLON ========== -->
         <div class="right-col">
-
-            <!-- KAZANAN SECIMLER -->
             @if (stats != null && (stats.TotalBracketRuns > 0 || stats.TotalBlindRuns > 0 || stats.TotalTierRuns > 0))
             {
                 <section>
@@ -1126,6 +1154,8 @@
                             <button class="btn-reveal" onclick="revealSpoiler()">👁 SEÇİMLERİ GÖSTER</button>
                         </div>
                         <div class="spoiler-content" id="spoilerContent">
+
+                            @* ===== BRACKET (ilk 3 açık, geri kalan gizli) ===== *@
                             @if (stats.BracketTopWinners.Any())
                             {
                                 <div class="stat-sub-panel">
@@ -1140,7 +1170,8 @@
                                         var tItem = t.Items.FirstOrDefault(x => x.Id == item.ItemId);
                                         if (thumbUrl == null && tItem != null) { thumbUrl = GetItemThumb(tItem.ImageUrl, tItem.YouTubeVideoId); }
                                         var champPercent = stats.TotalBracketRuns == 0 ? 0 : (int)Math.Round(item.WinCount * 100.0 / stats.TotalBracketRuns);
-                                        <div class="winner-card">
+
+                                        <div class="winner-card @(bracketRank > 3 ? "hidden-card" : "")" data-group="bracket">
                                             <div class="winner-card-header">
                                                 <span class="winner-rank">@bracketRank.</span>
                                                 <span class="winner-card-name">@item.ItemName</span>
@@ -1155,11 +1186,19 @@
                                             <div class="winner-progress-bar"><div class="fill-blue" style="width: @(item.WinRate)%;"></div></div>
                                         </div>
                                     }
+                                    @if (stats.BracketTopWinners.Count() > 3)
+                                    {
+                                        <div class="load-more-wrapper">
+                                            <button class="btn-load-more" onclick="loadMore('bracket', this)">DAHA FAZLA YÜKLE</button>
+                                        </div>
+                                    }
                                 </div>
                             }
+
+                            @* ===== BLIND (tüm bölüm gizli, butona basınca açılır) ===== *@
                             @if (stats.BlindTopItems.Any())
                             {
-                                <div class="stat-sub-panel">
+                                <div class="stat-sub-panel collapsed-section" id="blindSection">
                                     <h6>🎯 Blind - En İyi Sıra (@stats.TotalBlindRuns oyun)</h6>
                                     @{
                                         var blindRank = 0;
@@ -1169,7 +1208,8 @@
                                         blindRank++;
                                         var tItemB = t.Items.FirstOrDefault(x => x.Id == item.ItemId);
                                         var thumbUrlB = GetItemThumb(item.ImageUrl, tItemB?.YouTubeVideoId);
-                                        <div class="winner-card">
+
+                                        <div class="winner-card" data-group="blind">
                                             <div class="winner-card-header"><span class="winner-rank">@blindRank.</span><span class="winner-card-name">@item.ItemName</span></div>
                                             @if (thumbUrlB != null)
                                             {
@@ -1180,118 +1220,155 @@
                                         </div>
                                     }
                                 </div>
+
+                                @* ===== TIER (tüm bölüm gizli, butona basınca açılır) ===== *@
+                                @if (stats.TierTopItems.Any())
+                                {
+                                    <div class="stat-sub-panel collapsed-section" id="tierSection">
+                                        <h6>🏷️ Tier - En Çok S (@stats.TotalTierRuns oyun)</h6>
+                                        @{
+                                            var tierRank = 0;
+                                        }
+                                        @foreach (var item in stats.TierTopItems)
+                                        {
+                                            tierRank++;
+                                            var tItemT = t.Items.FirstOrDefault(x => x.Id == item.ItemId);
+                                            var thumbUrlT = GetItemThumb(item.ImageUrl, tItemT?.YouTubeVideoId);
+
+                                            <div class="winner-card" data-group="tier">
+                                                <div class="winner-card-header"><span class="winner-rank">@tierRank.</span><span class="winner-card-name">@item.ItemName</span></div>
+                                                @if (thumbUrlT != null)
+                                                {
+                                                    <img src="@thumbUrlT" alt="@item.ItemName" class="winner-card-thumb" />
+                                                }
+                                                <div class="winner-stat-row"><span class="stat-label">S:@item.STierCount A:@item.ATierCount B:@item.BTierCount</span></div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
+                                <div class="load-more-wrapper">
+                                    <button class="btn-load-more" onclick="loadMoreSections(this)">DAHA FAZLA YÜKLE</button>
+                                </div>
                             }
-                            @if (stats.TierTopItems.Any())
+                            else if (stats.TierTopItems.Any())
                             {
-                                <div class="stat-sub-panel">
+                                @* Sadece Tier varsa (Blind yoksa) *@
+                                <div class="stat-sub-panel collapsed-section" id="tierSection">
                                     <h6>🏷️ Tier - En Çok S (@stats.TotalTierRuns oyun)</h6>
                                     @{
-                                        var tierRank = 0;
+                                        var tierRank2 = 0;
                                     }
                                     @foreach (var item in stats.TierTopItems)
                                     {
-                                        tierRank++;
-                                        var tItemT = t.Items.FirstOrDefault(x => x.Id == item.ItemId);
-                                        var thumbUrlT = GetItemThumb(item.ImageUrl, tItemT?.YouTubeVideoId);
-                                        <div class="winner-card">
-                                            <div class="winner-card-header"><span class="winner-rank">@tierRank.</span><span class="winner-card-name">@item.ItemName</span></div>
-                                            @if (thumbUrlT != null)
+                                        tierRank2++;
+                                        var tItemT2 = t.Items.FirstOrDefault(x => x.Id == item.ItemId);
+                                        var thumbUrlT2 = GetItemThumb(item.ImageUrl, tItemT2?.YouTubeVideoId);
+
+                                        <div class="winner-card" data-group="tier">
+                                            <div class="winner-card-header"><span class="winner-rank">@tierRank2.</span><span class="winner-card-name">@item.ItemName</span></div>
+                                            @if (thumbUrlT2 != null)
                                             {
-                                                <img src="@thumbUrlT" alt="@item.ItemName" class="winner-card-thumb" />
+                                                <img src="@thumbUrlT2" alt="@item.ItemName" class="winner-card-thumb" />
                                             }
                                             <div class="winner-stat-row"><span class="stat-label">S:@item.STierCount A:@item.ATierCount B:@item.BTierCount</span></div>
                                         </div>
                                     }
                                 </div>
+
+                                <div class="load-more-wrapper">
+                                    <button class="btn-load-more" onclick="loadMoreSections(this)">DAHA FAZLA YÜKLE</button>
+                                </div>
                             }
+
                         </div>
                     </div>
                 </section>
             }
-
-            <!-- ========== YORUMLAR ========== -->
-            <section class="comment-box" id="comments">
-                <h5>💬 Yorumlar (@Model.CommentCount)</h5>
-
-                @if (SignInManager.IsSignedIn(User))
-                {
-                    <form method="post" asp-controller="Tournaments" asp-action="AddComment" class="comment-form">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="tournamentId" value="@t.Id" />
-                        <textarea name="content" placeholder="Yorumunuzu yazın..." maxlength="1000" required></textarea>
-                        <button type="submit" class="btn-comment-submit">Yorum Yap</button>
-                    </form>
-                }
-                else
-                {
-                    <div class="login-prompt">
-                        💬 Yorum yapmak için giriş yapın.
-                        <br />
-                        <a href="/Identity/Account/Login" class="btn-login-comment">GİRİŞ YAP →</a>
-                    </div>
-                }
-
-                @if (Model.Comments.Any())
-                {
-                    <div style="margin-top:16px;">
-                        @foreach (var comment in Model.Comments)
-                        {
-                            var isOwner = currentUserId != null && comment.UserId == currentUserId;
-                            var canDelete = isOwner || isAdmin;
-
-                            <div class="comment-item" id="comment-@comment.Id">
-                                <div class="comment-header">
-                                    <div class="comment-avatar">@comment.UserName[0].ToString().ToUpper()</div>
-                                    <div>
-                                        <span class="comment-username">@comment.UserName</span>
-                                        <div class="comment-date">@comment.CreatedAt.ToString("dd MMM yyyy HH:mm")</div>
-                                    </div>
-                                </div>
-                                <div class="comment-text" id="comment-text-@comment.Id">@comment.Content</div>
-
-                                <!-- YORUM AKSIYON BUTONLARI -->
-                                @if (canDelete || isOwner)
-                                {
-                                    <div class="comment-actions">
-                                        @if (isOwner)
-                                        {
-                                            <button type="button" class="btn-comment-action" onclick="toggleEditForm(@comment.Id)">✏️ Düzenle</button>
-                                        }
-                                        @if (canDelete)
-                                        {
-                                            <button type="button" class="btn-comment-delete" onclick="showDeleteConfirm(@comment.Id)">🗑️ Sil</button>
-                                        }
-                                    </div>
-                                }
-
-                                <!-- DÜZENLEME FORMU (gizli) -->
-                                @if (isOwner)
-                                {
-                                    <div class="comment-edit-form" id="edit-form-@comment.Id">
-                                        <form method="post" asp-controller="Tournaments" asp-action="EditComment">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="commentId" value="@comment.Id" />
-                                            <textarea name="content" maxlength="1000" required>@comment.Content</textarea>
-                                            <div class="comment-edit-actions">
-                                                <button type="submit" class="btn-edit-save">💾 Kaydet</button>
-                                                <button type="button" class="btn-edit-cancel" onclick="toggleEditForm(@comment.Id)">İptal</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div style="text-align:center;padding:20px;color:rgba(233,236,255,0.35);font-size:0.85rem;">
-                        Henüz yorum yapılmamış. İlk yorumu sen yap!
-                    </div>
-                }
-            </section>
         </div>
 
+    </div>
+
+    <!-- ========== YORUMLAR (Turnuva altında ortada) ========== -->
+    <div class="comments-section-center">
+        <section class="comment-box" id="comments">
+            <h5>💬 Yorumlar (@Model.CommentCount)</h5>
+
+            @if (SignInManager.IsSignedIn(User))
+            {
+                <form method="post" asp-controller="Tournaments" asp-action="AddComment" class="comment-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="tournamentId" value="@t.Id" />
+                    <textarea name="content" placeholder="Yorumunuzu yazın..." maxlength="1000" required></textarea>
+                    <button type="submit" class="btn-comment-submit">Yorum Yap</button>
+                </form>
+            }
+            else
+            {
+                <div class="login-prompt">
+                    💬 Yorum yapmak için giriş yapın.
+                    <br />
+                    <a href="/Identity/Account/Login" class="btn-login-comment">GİRİŞ YAP →</a>
+                </div>
+            }
+
+            @if (Model.Comments.Any())
+            {
+                <div style="margin-top:16px;">
+                    @foreach (var comment in Model.Comments)
+                    {
+                        var isOwner = currentUserId != null && comment.UserId == currentUserId;
+                        var canDelete = isOwner || isAdmin;
+
+                        <div class="comment-item" id="comment-@comment.Id">
+                            <div class="comment-header">
+                                <div class="comment-avatar">@comment.UserName[0].ToString().ToUpper()</div>
+                                <div>
+                                    <span class="comment-username">@comment.UserName</span>
+                                    <div class="comment-date">@comment.CreatedAt.ToString("dd MMM yyyy HH:mm")</div>
+                                </div>
+                            </div>
+                            <div class="comment-text" id="comment-text-@comment.Id">@comment.Content</div>
+
+                            @if (canDelete || isOwner)
+                            {
+                                <div class="comment-actions">
+                                    @if (isOwner)
+                                    {
+                                        <button type="button" class="btn-comment-action" onclick="toggleEditForm(@comment.Id)">✏️ Düzenle</button>
+                                    }
+                                    @if (canDelete)
+                                    {
+                                        <button type="button" class="btn-comment-delete" onclick="showDeleteConfirm(@comment.Id)">🗑️ Sil</button>
+                                    }
+                                </div>
+                            }
+
+                            @if (isOwner)
+                            {
+                                <div class="comment-edit-form" id="edit-form-@comment.Id">
+                                    <form method="post" asp-controller="Tournaments" asp-action="EditComment">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="commentId" value="@comment.Id" />
+                                        <textarea name="content" maxlength="1000" required>@comment.Content</textarea>
+                                        <div class="comment-edit-actions">
+                                            <button type="submit" class="btn-edit-save">💾 Kaydet</button>
+                                            <button type="button" class="btn-edit-cancel" onclick="toggleEditForm(@comment.Id)">İptal</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div style="text-align:center;padding:20px;color:rgba(233,236,255,0.35);font-size:0.85rem;">
+                    Henüz yorum yapılmamış. İlk yorumu sen yap!
+                </div>
+            }
+        </section>
     </div>
 </div>
 
@@ -1350,6 +1427,20 @@
     function unhoverRating() {
         var stars = document.querySelectorAll('#ratingStars .star-btn');
         stars.forEach(function (star) { star.classList.remove('hovered'); });
+    }
+
+    // ========== BRACKET: DAHA FAZLA YÜKLE (sadece gizli kartları aç) ==========
+    function loadMore(group, btn) {
+        var cards = document.querySelectorAll('.winner-card.hidden-card[data-group="' + group + '"]');
+        cards.forEach(function (card) { card.classList.add('show-card'); });
+        btn.style.display = 'none';
+    }
+
+    // ========== BLIND + TIER: DAHA FAZLA YÜKLE (tüm gizli bölümleri aç) ==========
+    function loadMoreSections(btn) {
+        var sections = document.querySelectorAll('.stat-sub-panel.collapsed-section');
+        sections.forEach(function (sec) { sec.classList.add('show-section'); });
+        btn.style.display = 'none';
     }
 
     // Yorum Düzenleme

@@ -17,480 +17,1088 @@
     bool showImage = hasImage;
     bool showVideo = !hasImage && hasVideo;
 
-    // ✅ Turnuvaya dön linki için slug (controller dolduracak)
     var slug = ViewBag.Slug as string;
 
-    // YouTube kapak helper (slot thumbnails için de kullanacağız)
     string? YtThumb(string? videoId)
         => string.IsNullOrWhiteSpace(videoId) ? null : $"https://img.youtube.com/vi/{videoId}/hqdefault.jpg";
+
+    // Mevcut item'ın kapak görseli
+    var currentThumb = !string.IsNullOrWhiteSpace(item?.ImageUrl)
+        ? item!.ImageUrl
+        : YtThumb(item?.YouTubeVideoId);
+
+    // Shuffle için tüm thumbnail'ler
+    var allThumbs = new List<string>();
+    foreach (var s in slots)
+    {
+        var si = s.TournamentItem;
+        var t = !string.IsNullOrWhiteSpace(si?.ImageUrl) ? si!.ImageUrl : YtThumb(si?.YouTubeVideoId);
+        if (!string.IsNullOrWhiteSpace(t) && !allThumbs.Contains(t!)) { allThumbs.Add(t!); }
+    }
+    if (!string.IsNullOrWhiteSpace(currentThumb) && !allThumbs.Contains(currentThumb!))
+    {
+        allThumbs.Add(currentThumb!);
+    }
 }
 
 <style>
-    /* ✅ Oyun ekranı: tam ekran + navbar/footer kapalı */
     html, body {
         height: 100%;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     body {
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #070a18 !important;
+        background: #1a1f3a !important;
+        overflow-x: hidden;
     }
 
-    /* ✅ Navbar + Footer’ı bu sayfada tamamen gizle */
-    header, nav, .navbar {
+    header, nav, .navbar, footer {
         display: none !important;
     }
 
-    footer {
-        display: none !important;
-    }
-
-    .br-scene {
-        min-height: 100vh;
-        background: radial-gradient(1100px 650px at 20% 10%, rgba(255, 180, 0, .10), transparent 60%), radial-gradient(900px 600px at 85% 30%, rgba(135, 80, 255, .12), transparent 55%), linear-gradient(135deg, #0b1030, #070a18 55%, #060816);
-        padding: 24px 0 40px;
-        color: #e9ecff;
-        position: relative;
-    }
-
-    /* ✅ Quizlet tarzı sol üst "çıkış" */
-    .exitBtn {
+    /* ========== QUIZEI ARKA PLAN ========== */
+    .blind-bg {
         position: fixed;
-        top: 16px;
-        left: 16px;
-        z-index: 9999;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 14px;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.10);
-        color: rgba(233,236,255,0.95);
-        text-decoration: none;
-        font-weight: 900;
-        box-shadow: 0 18px 40px rgba(0,0,0,0.35);
-        backdrop-filter: blur(10px);
-        transition: transform .12s ease, filter .12s ease, border-color .12s ease;
-    }
-
-        .exitBtn:hover {
-            transform: translateY(-1px);
-            filter: brightness(1.05);
-            border-color: rgba(255,255,255,0.18);
-            color: #fff;
-            text-decoration: none;
-        }
-
-    .glass {
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,255,255,0.08);
-        box-shadow: 0 18px 40px rgba(0,0,0,0.35);
-        border-radius: 18px;
+        inset: 0;
+        z-index: 0;
         overflow: hidden;
     }
 
-    .topbar {
+    .blind-bg-img {
+        position: absolute;
+        inset: -60px;
+        background-size: cover;
+        background-position: center;
+        filter: blur(18px) brightness(0.45) saturate(1.5);
+        transform: scale(1.25);
+        transition: background-image 0.5s ease;
+    }
+
+    .blind-bg-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(20, 24, 50, 0.55);
+    }
+
+    /* ========== SCENE ========== */
+    .scene {
+        position: relative;
+        z-index: 2;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        color: #e9ecff;
+        font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    }
+
+    /* ========== TOP BAR (Quizei tarzı ince bar) ========== */
+    .q-topbar {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-        padding: 14px 16px;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
+        padding: 10px 24px;
+        background: rgba(15, 18, 40, 0.85);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        flex-shrink: 0;
     }
 
-    .title {
-        font-weight: 900;
-        letter-spacing: .4px;
-        margin: 0;
-        font-size: 20px;
+    .q-left {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 16px;
     }
 
-    .pill {
-        display: inline-flex;
+    .q-exit {
+        color: rgba(233, 236, 255, 0.75);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+        transition: all .15s;
+    }
+
+        .q-exit:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+            text-decoration: none;
+        }
+
+    .q-title {
+        font-weight: 900;
+        font-size: 16px;
+        display: flex;
         align-items: center;
         gap: 8px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.08);
-        font-size: 12px;
-        color: rgba(233,236,255,.92);
+    }
+
+    .q-pills {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .q-pill {
+        padding: 4px 10px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        font-size: 11px;
+        font-weight: 700;
+        color: rgba(233, 236, 255, 0.85);
         white-space: nowrap;
     }
 
-    .progressTrack {
-        height: 10px;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.08);
-        overflow: hidden;
-        border: 1px solid rgba(255,255,255,0.08);
-        margin: 10px 16px 0;
+    /* ========== PROGRESS (Quizei: ince kırmızı-turuncu bar) ========== */
+    .q-progress {
+        height: 5px;
+        background: rgba(255, 255, 255, 0.05);
+        flex-shrink: 0;
     }
 
-    .progressFill {
+    .q-progress-fill {
         height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, #22c55e, #60a5fa);
+        background: linear-gradient(90deg, #ff2d55, #ffb020);
+        transition: width 0.4s ease;
     }
 
-    .layout {
-        display: grid;
-        grid-template-columns: 260px 1fr;
-        gap: 16px;
-        padding: 16px;
+    /* ========== MAIN LAYOUT ========== */
+    .q-main {
+        flex: 1;
+        display: flex;
+        min-height: 0;
     }
 
-    /* ✅ Slot alanını sabitle + scroll */
-    .slots {
-        padding: 12px;
-        max-height: calc(100vh - 24px - 40px - 150px);
-        overflow: auto;
-        border-radius: 16px;
-        background: rgba(255,255,255,0.02);
-        border: 1px solid rgba(255,255,255,0.06);
+    /* ========== SOL: SLOT LİSTESİ (Quizei tarzı) ========== */
+    .q-sidebar {
+        width: 240px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        padding: 16px 10px 10px 16px;
     }
 
-        .slots::-webkit-scrollbar {
-            width: 10px;
+    .q-sidebar-title {
+        font-weight: 900;
+        font-size: 14px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(233, 236, 255, 0.85);
+    }
+
+    .q-sidebar-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 6px;
+    }
+
+        .q-sidebar-scroll::-webkit-scrollbar {
+            width: 5px;
         }
 
-        .slots::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.10);
+        .q-sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.08);
             border-radius: 999px;
         }
 
-        .slots::-webkit-scrollbar-track {
+        .q-sidebar-scroll::-webkit-scrollbar-track {
             background: transparent;
         }
 
-    .slotBtn {
+    /* Quizei slot butonları (sadece numara kutusu + küçük thumb + isim) */
+    .q-slot {
         width: 100%;
         text-align: left;
-        border: none;
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 10px;
         color: #e9ecff;
-        padding: 10px 10px;
+        padding: 6px 8px;
         display: flex;
         align-items: center;
-        gap: 10px;
-        margin-bottom: 10px;
-        transition: transform .12s ease, filter .12s ease, border-color .12s ease, box-shadow .12s ease;
+        gap: 8px;
+        margin-bottom: 6px;
         cursor: pointer;
+        transition: all .12s ease;
         position: relative;
     }
 
-        .slotBtn:hover {
+        .q-slot:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 176, 32, 0.25);
             transform: translateY(-1px);
-            filter: brightness(1.03);
-            border-color: rgba(255,255,255,0.14);
         }
 
-        .slotBtn:disabled {
-            opacity: 1;
+        .q-slot:disabled {
             cursor: default;
-            transform: none !important;
-            filter: none !important;
+            opacity: 1;
         }
 
-        /* ✅ TOP3 NEON (Slotlar dolunca) */
-        .slotBtn.top1 {
-            border-color: rgba(255, 215, 0, 0.35) !important;
-            box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.18), 0 0 0 4px rgba(255, 215, 0, 0.07), 0 18px 40px rgba(0,0,0,0.35);
-        }
-
-        .slotBtn.top2 {
-            border-color: rgba(160, 200, 255, 0.35) !important;
-            box-shadow: 0 0 0 1px rgba(160, 200, 255, 0.16), 0 0 0 4px rgba(160, 200, 255, 0.06), 0 18px 40px rgba(0,0,0,0.35);
-        }
-
-        .slotBtn.top3 {
-            border-color: rgba(255, 160, 110, 0.35) !important;
-            box-shadow: 0 0 0 1px rgba(255, 160, 110, 0.16), 0 0 0 4px rgba(255, 160, 110, 0.06), 0 18px 40px rgba(0,0,0,0.35);
-        }
-
-            .slotBtn.top1::after, .slotBtn.top2::after, .slotBtn.top3::after {
-                content: "";
-                position: absolute;
-                inset: -1px;
-                border-radius: 14px;
-                pointer-events: none;
-                background: radial-gradient(600px 120px at 20% 0%, rgba(255,255,255,0.10), transparent 55%);
-                opacity: 0.8;
-                mix-blend-mode: screen;
-            }
-
-    .slotIndex {
-        width: 34px;
-        height: 34px;
-        border-radius: 12px;
+    .q-slot-num {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 900;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.10);
-        flex: 0 0 auto;
+        font-size: 13px;
+        flex-shrink: 0;
+        background: rgba(50, 60, 110, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(233, 236, 255, 0.8);
     }
 
-    .slotThumb {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
+    .q-slot.filled .q-slot-num {
+        background: rgba(34, 197, 94, 0.12);
+        border-color: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    .q-slot-thumb {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
         overflow: hidden;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.10);
-        flex: 0 0 auto;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        flex-shrink: 0;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: rgba(233,236,255,0.7);
+        color: rgba(233, 236, 255, 0.45);
         font-weight: 900;
+        font-size: 13px;
     }
 
-        .slotThumb img {
+        .q-slot-thumb img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: block;
         }
 
-    .slotText {
+    .q-slot-info {
         min-width: 0;
+        flex: 1;
     }
 
-    .slotName {
-        font-weight: 900;
-        font-size: 13px;
-        line-height: 1.2;
+    .q-slot-name {
+        font-weight: 800;
+        font-size: 11px;
         margin: 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
-    .slotMeta {
-        font-size: 11px;
-        color: rgba(233,236,255,0.65);
-        margin: 2px 0 0;
+    .q-slot-meta {
+        font-size: 9px;
+        color: rgba(233, 236, 255, 0.45);
+        margin: 1px 0 0;
     }
 
-    .slotEmpty {
-        opacity: .9;
+    .q-slot.top1 {
+        border-color: rgba(255, 215, 0, 0.30) !important;
     }
 
-    .stage {
-        padding: 12px;
+    .q-slot.top2 {
+        border-color: rgba(160, 200, 255, 0.25) !important;
+    }
+
+    .q-slot.top3 {
+        border-color: rgba(255, 160, 110, 0.25) !important;
+    }
+
+    /* ========== SAĞ: İÇERİK ALANI (Quizei gibi ortada) ========== */
+    .q-content {
+        flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 30px;
+        min-width: 0;
+        gap: 14px;
+    }
+
+    /* ========== HERO WRAPPER (Videonun arkasında büyük kapak) ========== */
+    .q-hero-outer {
+        position: relative;
+        width: 100%;
+        max-width: 720px;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 3px solid rgba(255, 176, 32, 0.40);
+        box-shadow: 0 12px 50px rgba(0, 0, 0, 0.5);
+        background: #111;
+    }
+
+    /* Arkadaki kapak görseli (büyük, blur'suz, tam arka plan) */
+    .q-hero-backdrop {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        filter: blur(6px) brightness(0.35);
+        transform: scale(1.1);
+        z-index: 0;
+    }
+
+    /* Video container (ortada, daha küçük) */
+    .q-hero-inner {
+        position: relative;
+        z-index: 2;
+        padding: 24px 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Video başlık satırı */
+    .q-video-header {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 0 8px;
+    }
+
+    .q-video-channel-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+        color: rgba(233, 236, 255, 0.6);
+    }
+
+    .q-video-title-text {
+        font-size: 13px;
+        font-weight: 700;
+        color: rgba(233, 236, 255, 0.9);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
         min-width: 0;
     }
 
-    .nameBox {
+    .q-video-actions {
+        display: flex;
+        gap: 12px;
+        flex-shrink: 0;
+    }
+
+    .q-video-action {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        color: rgba(233, 236, 255, 0.6);
+        font-size: 9px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: color .15s;
+        background: none;
+        border: none;
+        padding: 0;
+        text-decoration: none;
+    }
+
+        .q-video-action:hover {
+            color: #fff;
+            text-decoration: none;
+        }
+
+    .q-video-action-icon {
+        font-size: 18px;
+    }
+
+    /* Video frame (iframe kapsayıcı, Quizei gibi daha küçük) */
+    .q-video-frame {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #000;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+        position: relative;
+    }
+
+        .q-video-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .q-video-frame img.q-thumb-play {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+        }
+
+    /* Play butonu overlay */
+    .q-play-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 3;
+    }
+
+    .q-play-btn {
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 0, 0, 0.88);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 24px rgba(255, 0, 0, 0.40);
+        transition: transform .2s;
+    }
+
+        .q-play-btn:hover {
+            transform: scale(1.12);
+        }
+
+        .q-play-btn::after {
+            content: '';
+            border-style: solid;
+            border-width: 12px 0 12px 22px;
+            border-color: transparent transparent transparent #fff;
+            margin-left: 4px;
+        }
+
+    .q-video-frame.playing .q-play-overlay,
+    .q-video-frame.playing .q-thumb-play {
+        display: none;
+    }
+
+    .q-video-frame iframe {
+        display: none;
+    }
+
+    .q-video-frame.playing iframe {
+        display: block;
+    }
+
+    /* YouTube badge alt kısım */
+    .q-yt-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.45);
+        color: rgba(233, 236, 255, 0.75);
+        font-size: 12px;
+        font-weight: 700;
+        align-self: flex-start;
+    }
+
+    .q-yt-icon {
+        width: 22px;
+        height: 16px;
+        background: #ff0000;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .q-yt-icon::after {
+            content: '';
+            border-style: solid;
+            border-width: 4px 0 4px 7px;
+            border-color: transparent transparent transparent #fff;
+        }
+
+    /* Resim modu (tam kaplama) */
+    .q-hero-img-full {
+        width: 100%;
+        display: block;
+        border-radius: 0;
+    }
+
+    .q-hero-empty {
+        padding: 120px 20px;
+        text-align: center;
+        color: rgba(233, 236, 255, 0.5);
+        font-size: 14px;
+    }
+
+    /* ========== SHUFFLE OVERLAY ========== */
+    .shuffle-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        background: #111;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+        .shuffle-overlay.hide {
+            animation: shuffleFadeOut 0.4s ease forwards;
+            pointer-events: none;
+        }
+
+    @@keyframes shuffleFadeOut {
+        0% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0;
+        }
+    }
+
+    .shuffle-img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0;
+    }
+
+        .shuffle-img.active {
+            opacity: 1;
+        }
+
+    .shuffle-label {
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 5;
+        padding: 6px 18px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(6px);
+        color: #ffb020;
+        font-weight: 900;
+        font-size: 12px;
+    }
+
+    /* ========== İTEM İSMİ KUTUSU (Quizei sarı kutu) ========== */
+    .q-name-box {
+        max-width: 720px;
+        width: 100%;
+        padding: 14px 20px;
+        border-radius: 12px;
+        background: rgba(255, 176, 32, 0.92);
+        color: #111;
+        text-align: center;
+        font-weight: 900;
+        font-size: 17px;
+        font-family: monospace, 'Courier New', Courier;
+        letter-spacing: 0.5px;
+        box-shadow: 0 6px 20px rgba(255, 176, 32, 0.25);
+    }
+
+    /* ========== ALT SATIRLAR ========== */
+    .q-bottom-row {
+        max-width: 720px;
+        width: 100%;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
         flex-wrap: wrap;
-        padding: 12px 14px;
+    }
+
+    .q-hint-text {
+        color: rgba(233, 236, 255, 0.4);
+        font-size: 11px;
+        font-style: italic;
+    }
+
+    .q-bottom-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .q-btn-more {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(233, 236, 255, 0.8);
+        font-weight: 700;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all .15s;
+    }
+
+        .q-btn-more:hover {
+            background: rgba(255, 255, 255, 0.10);
+            color: #fff;
+        }
+
+    .q-btn-small {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        color: rgba(233, 236, 255, 0.6);
+        font-size: 9px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all .15s;
+        text-decoration: none;
+    }
+
+        .q-btn-small:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.08);
+            text-decoration: none;
+        }
+
+    .q-btn-icon {
+        font-size: 16px;
+    }
+
+    /* ========== FOOTER ========== */
+    .q-footer {
+        text-align: center;
+        padding: 8px 20px 14px;
+        flex-shrink: 0;
+    }
+
+    .q-footer-text {
+        color: rgba(233, 236, 255, 0.2);
+        font-size: 10px;
+    }
+
+        .q-footer-text strong {
+            color: rgba(255, 176, 32, 0.5);
+            font-weight: 800;
+        }
+
+    /* ========== POPUP ========== */
+    .q-popup-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(5px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .q-popup-overlay.show {
+            display: flex;
+        }
+
+    .q-popup {
+        background: #1a1f3d;
+        border: 2px solid rgba(255, 176, 32, 0.30);
         border-radius: 16px;
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,255,255,0.08);
+        padding: 18px;
+        max-width: 640px;
+        width: 90%;
+        max-height: 75vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     }
 
-    .itemName {
-        margin: 0;
-        font-weight: 1000;
-        letter-spacing: .3px;
-        font-size: 18px;
+    .q-popup-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
     }
 
-    .hint {
-        color: rgba(233,236,255,0.72);
-        font-size: 12px;
-        margin: 0;
+    .q-popup-title {
+        font-weight: 900;
+        font-size: 14px;
+        color: #ffb020;
     }
 
-    .neon {
-        box-shadow: 0 0 0 1px rgba(255,255,255,0.10), 0 0 0 4px rgba(255, 180, 0, 0.08), 0 20px 45px rgba(0,0,0,0.45);
-        border-color: rgba(255, 200, 0, 0.35) !important;
-    }
-
-    .hero {
-        border-radius: 18px;
-        overflow: hidden;
-        border: 1px solid rgba(255,255,255,0.10);
-        background: rgba(255,255,255,0.03);
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
-    }
-
-    .heroImg {
-        width: 100%;
-        height: 420px;
-        object-fit: cover;
-        display: block;
-        background: rgba(255,255,255,0.03);
-    }
-
-    .heroEmpty {
-        height: 420px;
+    .q-popup-x {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(255, 255, 255, 0.05);
+        color: #e9ecff;
+        font-size: 14px;
+        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: rgba(233,236,255,0.7);
     }
 
+        .q-popup-x:hover {
+            background: rgba(255,255,255,0.10);
+        }
+
+    .q-popup-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 8px;
+    }
+
+    .q-popup-card {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        background: rgba(255, 255, 255, 0.03);
+        transition: all .12s;
+    }
+
+        .q-popup-card:hover {
+            border-color: rgba(255, 176, 32, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .q-popup-card img {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            display: block;
+        }
+
+    .q-popup-card-name {
+        padding: 5px 7px;
+        font-size: 10px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: rgba(233, 236, 255, 0.8);
+    }
+
+    /* ========== RESPONSIVE ========== */
     @@media (max-width: 992px) {
-        .layout {
-            grid-template-columns: 1fr;
+        .q-main {
+            flex-direction: column;
         }
 
-        .slots {
-            max-height: none;
-            overflow: visible;
+        .q-sidebar {
+            width: 100%;
+            max-height: 220px;
+            padding: 10px;
         }
 
-        .heroImg, .heroEmpty {
-            height: 320px;
+        .q-content {
+            padding: 14px;
         }
 
-        .exitBtn {
-            top: 12px;
-            left: 12px;
+        .q-hero-inner {
+            padding: 16px;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .q-topbar {
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px 12px;
+        }
+
+        .q-name-box {
+            font-size: 14px;
+            padding: 10px 14px;
+        }
+
+        .q-hero-inner {
+            padding: 10px;
         }
     }
 </style>
 
-<div class="br-scene">
+@* ========== ARKA PLAN ========== *@
+<div class="blind-bg">
+    <div class="blind-bg-img" style="background-image: url('@(currentThumb ?? "")');"></div>
+    <div class="blind-bg-overlay"></div>
+</div>
 
-    <a class="exitBtn"
-       href="@(string.IsNullOrWhiteSpace(slug) ? Url.Action("Index","Home") : $"/t/{slug}")"
-       title="Turnuvaya geri dön">
-        ← Çıkış / Turnuvaya Dön
-    </a>
+<div class="scene">
 
-    <div class="container">
-        <div class="glass">
+    @* ========== TOP BAR ========== *@
+    <div class="q-topbar">
+        <div class="q-left">
+            <a class="q-exit"
+               href="@(string.IsNullOrWhiteSpace(slug) ? Url.Action("Index","Home") : $"/t/{slug}")">
+                ← ÇIKIŞ
+            </a>
+            <span class="q-title">🕶️ Blind Rank</span>
+        </div>
+        <div class="q-pills">
+            <span class="q-pill">RunId: @Model.RunId</span>
+            <span class="q-pill">✅ @done / @total</span>
+            <span class="q-pill">❌ Kalan: @remaining</span>
+            <span class="q-pill">📈 %@percent</span>
+        </div>
+    </div>
 
-            <div class="topbar">
-                <h2 class="title">🕶️ Blind Rank</h2>
+    @* ========== PROGRESS ========== *@
+    <div class="q-progress">
+        <div class="q-progress-fill" style="width:@percent%"></div>
+    </div>
 
-                <div class="d-flex flex-wrap gap-2 justify-content-end">
-                    <span class="pill">RunId: @Model.RunId</span>
-                    <span class="pill">✅ @done / @total</span>
-                    <span class="pill">⏳ Kalan: @remaining</span>
-                    <span class="pill">📈 %@percent</span>
-                </div>
-            </div>
+    @* ========== MAIN ========== *@
+    <div class="q-main">
 
-            <div class="progressTrack">
-                <div class="progressFill" style="width:@percent%"></div>
-            </div>
+        @* ========== SOL: SLOTLAR ========== *@
+        <div class="q-sidebar">
+            <div class="q-sidebar-title">📋 Sıralama</div>
+            <div class="q-sidebar-scroll">
+                @foreach (var s in slots)
+                {
+                    var isFilled = s.TournamentItemId != null;
+                    var si = s.TournamentItem;
+                    var thumb = !string.IsNullOrWhiteSpace(si?.ImageUrl) ? si!.ImageUrl : YtThumb(si?.YouTubeVideoId);
+                    var topClass = (isFilled && s.Position == 1) ? "top1"
+                    : (isFilled && s.Position == 2) ? "top2"
+                    : (isFilled && s.Position == 3) ? "top3" : "";
 
-            <div class="layout">
+                    <form asp-action="BlindPlace" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="runId" value="@Model.RunId" />
+                        <input type="hidden" name="blindRunItemId" value="@Model.Id" />
+                        <input type="hidden" name="position" value="@s.Position" />
 
-                <!-- SOL: SLOT LİST -->
-                <div class="slots">
-                    <div class="mb-2" style="font-weight:900; letter-spacing:.3px;">Sıralaman</div>
+                        <button type="submit"
+                                class="q-slot @(isFilled ? "filled" : "") @topClass"
+                        @(isFilled ? "disabled" : "")>
 
-                    @foreach (var s in slots)
-                    {
-                        var filled = s.TournamentItemId != null;
-                        var si = s.TournamentItem;
-
-                        var thumb = !string.IsNullOrWhiteSpace(si?.ImageUrl)
-                        ? si!.ImageUrl
-                        : YtThumb(si?.YouTubeVideoId);
-
-                        // ✅ Top3 neon class (SADECE doluysa)
-                        var topClass = (filled && s.Position == 1) ? "top1"
-                        : (filled && s.Position == 2) ? "top2"
-                        : (filled && s.Position == 3) ? "top3"
-                        : "";
-
-                        <form asp-action="BlindPlace" method="post" class="m-0">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="runId" value="@Model.RunId" />
-                            <input type="hidden" name="blindRunItemId" value="@Model.Id" />
-                            <input type="hidden" name="position" value="@s.Position" />
-
-                            <button type="submit"
-                                    class="slotBtn @(filled ? "" : "slotEmpty") @topClass"
-                            @(filled ? "disabled" : "")
-                                    title="Bu item'ı bu sıraya koy">
-
-                                <div class="slotIndex">@s.Position</div>
-
-                                <div class="slotThumb">
-                                    @if (filled && !string.IsNullOrWhiteSpace(thumb))
-                                    {
-                                        <img src="@thumb" />
-                                    }
-                                    else if (filled)
-                                    {
-                                        <span>✓</span>
-                                    }
-                                    else
-                                    {
-                                        <span>?</span>
-                                    }
-                                </div>
-
-                                <div class="slotText">
-                                    <p class="slotName">
-                                        @(filled ? (si?.Name ?? "Seçildi") : "Boş Slot")
-                                    </p>
-                                    <p class="slotMeta">
-                                        @(filled ? "Kilitledin" : "Tıkla → Yerleştir")
-                                    </p>
-                                </div>
-                            </button>
-                        </form>
-                    }
-                </div>
-
-                <!-- ORTA: O ANKİ ITEM -->
-                <div class="stage">
-                    <div class="nameBox neon">
-                        <div>
-                            <p class="hint m-0">Sıradaki parça</p>
-                            <h3 class="itemName">@item?.Name</h3>
-                        </div>
-                        <div class="hint">Soldan bir slot seç 👉</div>
-                    </div>
-
-                    <div class="hero neon">
-                        @if (showImage)
-                        {
-                            <img src="@item!.ImageUrl" class="heroImg" />
-                        }
-                        else if (showVideo)
-                        {
-                            <div class="ratio ratio-16x9">
-                                <iframe src="https://www.youtube.com/embed/@(item!.YouTubeVideoId)"
-                                        allowfullscreen></iframe>
+                            <div class="q-slot-num">@s.Position</div>
+                            <div class="q-slot-thumb">
+                                @if (isFilled && !string.IsNullOrWhiteSpace(thumb))
+                                {
+                                    <img src="@thumb" alt="" />
+                                }
+                                else if (isFilled)
+                                {
+                                    <span>✓</span>
+                                }
+                                else
+                                {
+                                    <span>?</span>
+                                }
                             </div>
-                        }
-                        else
-                        {
-                            <div class="heroEmpty">Görsel / Video yok</div>
-                        }
-                    </div>
+                            <div class="q-slot-info">
+                                <p class="q-slot-name">@(isFilled ? (si?.Name ?? "Seçildi") : "Boş Slot")</p>
+                                <p class="q-slot-meta">@(isFilled ? "Kilitledin" : "Tıkla → Yerleştir")</p>
+                            </div>
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
 
-                    <div class="hint">
-                        İpucu: Blind mantığı gereği, item’ları “bilmeden” doğru sıraya koyuyorsun. Bitince sonuç ekranında listeyi göreceksin.
-                    </div>
+        @* ========== SAĞ: İÇERİK ========== *@
+        <div class="q-content">
+
+            @* ========== HERO (Quizei tarzı: arkada kapak + ortada küçük video) ========== *@
+            <div class="q-hero-outer" id="heroOuter">
+
+                @* Shuffle overlay *@
+                <div class="shuffle-overlay" id="shuffleOverlay">
+                    @foreach (var th in allThumbs)
+                    {
+                        <img class="shuffle-img" src="@th" alt="" />
+                    }
+                    <div class="shuffle-label">🎲 Seçiliyor...</div>
                 </div>
 
+                @if (showVideo)
+                {
+                    @* Arkadaki kapak görseli (büyük, hafif blur) *@
+                    <div class="q-hero-backdrop" style="background-image: url('@YtThumb(item!.YouTubeVideoId)');"></div>
+
+                    <div class="q-hero-inner">
+                        @* Video başlık satırı *@
+                        <div class="q-video-header">
+                            <div class="q-video-channel-icon">🎵</div>
+                            <div class="q-video-title-text">@item.Name</div>
+                            <div class="q-video-actions">
+                                <a class="q-video-action"
+                                   href="@(string.IsNullOrWhiteSpace(slug) ? Url.Action("Index","Home") : $"/t/{slug}")">
+                                    <span class="q-video-action-icon">🕐</span>
+                                    Daha sonr...
+                                </a>
+                                <button class="q-video-action" onclick="sharePage()">
+                                    <span class="q-video-action-icon">↗</span>
+                                    Paylaş
+                                </button>
+                            </div>
+                        </div>
+
+                        @* Video frame (küçük, Quizei gibi) *@
+                        <div class="q-video-frame" id="videoFrame">
+                            <img class="q-thumb-play"
+                                 src="@YtThumb(item.YouTubeVideoId)"
+                                 alt="@item.Name" />
+                            <div class="q-play-overlay" onclick="playMainVideo('@item.YouTubeVideoId')">
+                                <div class="q-play-btn"></div>
+                            </div>
+                            <iframe id="mainIframe" allowfullscreen allow="autoplay"></iframe>
+                        </div>
+
+                        @* YouTube badge *@
+                        <div class="q-yt-badge">
+                            <span>İzlemek için:</span>
+                            <span class="q-yt-icon"></span>
+                            <span>YouTube</span>
+                        </div>
+                    </div>
+                }
+                else if (showImage)
+                {
+                    <img src="@item!.ImageUrl" class="q-hero-img-full" />
+                }
+                else
+                {
+                    <div class="q-hero-empty">Görsel / Video yok</div>
+                }
+            </div>
+
+            @* ========== İTEM İSMİ (Quizei sarı kutu) ========== *@
+            <div class="q-name-box">
+                @item?.Name
+            </div>
+
+            @* ========== ALT SATIR ========== *@
+            <div class="q-bottom-row">
+                <div class="q-hint-text">
+                    İpucu: Blind mantığı gereği, item'ları "bilmeden" doğru sıraya koyuyorsun.
+                </div>
+                <div class="q-bottom-actions">
+                    <button class="q-btn-more" onclick="document.getElementById('morePopup').classList.add('show')">
+                        📺 Daha fazla video
+                    </button>
+                    <a class="q-btn-small"
+                       href="@(string.IsNullOrWhiteSpace(slug) ? Url.Action("Index","Home") : $"/t/{slug}")">
+                        <span class="q-btn-icon">🕐</span>
+                        Daha Sonr...
+                    </a>
+                    <button class="q-btn-small" onclick="sharePage()">
+                        <span class="q-btn-icon">↗</span>
+                        Paylaş
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+
+    @* ========== FOOTER ========== *@
+    <div class="q-footer">
+        <div class="q-footer-text">made with <strong>RankArena</strong></div>
+    </div>
 </div>
+
+@* ========== DAHA FAZLA VİDEO POPUP ========== *@
+<div class="q-popup-overlay" id="morePopup">
+    <div class="q-popup">
+        <div class="q-popup-head">
+            <span class="q-popup-title">📺 Daha fazla video</span>
+            <button class="q-popup-x" onclick="document.getElementById('morePopup').classList.remove('show')">✕</button>
+        </div>
+        <div class="q-popup-grid">
+            @foreach (var s in slots)
+            {
+                var si = s.TournamentItem;
+                if (si == null) continue;
+                var popThumb = !string.IsNullOrWhiteSpace(si.ImageUrl) ? si.ImageUrl : YtThumb(si.YouTubeVideoId);
+                if (string.IsNullOrWhiteSpace(popThumb)) continue;
+
+                <div class="q-popup-card">
+                    <img src="@popThumb" alt="@si.Name" />
+                    <div class="q-popup-card-name">@si.Name</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== VIDEO OYNAT ==========
+    function playMainVideo(videoId) {
+        var frame = document.getElementById('videoFrame');
+        var iframe = document.getElementById('mainIframe');
+        if (!frame || !iframe) return;
+        iframe.src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0';
+        frame.classList.add('playing');
+    }
+
+    // ========== SHUFFLE ANİMASYONU ==========
+    (function () {
+        var overlay = document.getElementById('shuffleOverlay');
+        if (!overlay) return;
+
+        var imgs = overlay.querySelectorAll('.shuffle-img');
+        if (imgs.length === 0) { overlay.style.display = 'none'; return; }
+
+        var idx = 0;
+        var totalCycles = Math.min(imgs.length * 3, 18);
+        var interval = 90;
+        var count = 0;
+
+        imgs[0].classList.add('active');
+
+        var timer = setInterval(function () {
+            imgs[idx].classList.remove('active');
+            idx = (idx + 1) % imgs.length;
+            imgs[idx].classList.add('active');
+            count++;
+
+            if (count > totalCycles - 6) interval += 35;
+            if (count > totalCycles - 3) interval += 70;
+
+            if (count >= totalCycles) {
+                clearInterval(timer);
+                setTimeout(function () {
+                    overlay.classList.add('hide');
+                    setTimeout(function () { overlay.style.display = 'none'; }, 450);
+                }, 300);
+            }
+        }, interval);
+    })();
+
+    // ========== PAYLAŞ ==========
+    function sharePage() {
+        var url = window.location.href;
+        if (navigator.share) {
+            navigator.share({ title: 'RankArena - Blind Rank', url: url });
+        } else if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function () { alert('Link kopyalandı!'); });
+        } else {
+            prompt('Linki kopyala:', url);
+        }
+    }
+</script>
