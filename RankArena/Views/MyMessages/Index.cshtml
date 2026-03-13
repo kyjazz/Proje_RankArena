@@ -1,0 +1,110 @@
+﻿@model List<RankArena.Models.Entities.AdminMessage>
+@{
+    ViewData["Title"] = "Mesajlarım";
+}
+
+<div class="container py-4" style="max-width:900px;">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h2 class="fw-bold">📬 Mesajlarım</h2>
+            <div style="color:rgba(233,236,255,0.6);">Admin tarafından gönderilen bildirimler.</div>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            @{
+                var unreadCount = Model.Count(m => !m.IsRead);
+            }
+            @if (unreadCount > 0)
+            {
+                <form method="post" asp-controller="MyMessages" asp-action="MarkAllRead">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-warning btn-sm px-3">
+                        ✅ Tümünü Okundu İşaretle (@unreadCount)
+                    </button>
+                </form>
+            }
+            <span style="background:rgba(255,176,32,0.12); border:1px solid rgba(255,176,32,0.35); color:#ffd37a; padding:6px 14px; border-radius:8px; font-size:0.85rem; font-weight:600;">
+                Toplam: @Model.Count
+            </span>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:48px; text-align:center;">
+            <div style="font-size:3rem; margin-bottom:12px;">📭</div>
+            <div style="font-size:1.2rem; font-weight:700; margin-bottom:6px;">Henüz mesajınız yok</div>
+            <div style="color:rgba(233,236,255,0.5);">Admin tarafından bir bildirim geldiğinde burada görünecektir.</div>
+        </div>
+    }
+    else
+    {
+        @foreach (var m in Model)
+        {
+            var borderColor = m.IsRead ? "rgba(255,255,255,0.08)" : "rgba(255,176,32,0.4)";
+            var bgColor = m.IsRead ? "rgba(255,255,255,0.03)" : "rgba(255,176,32,0.06)";
+
+            <a href="/MyMessages/Detail/@m.Id" style="text-decoration:none; color:inherit;">
+                <div style="background:@bgColor; border:1px solid @borderColor; border-radius:14px; padding:18px 22px; margin-bottom:12px; transition:all .15s; cursor:pointer;"
+                     onmouseover="this.style.borderColor='rgba(255,176,32,0.6)'; this.style.background='rgba(255,176,32,0.08)';"
+                     onmouseout="this.style.borderColor='@borderColor'; this.style.background='@bgColor';">
+
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div style="flex:1;">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                @if (!m.IsRead)
+                                {
+                                    <span style="width:10px; height:10px; border-radius:50%; background:#ffb020; display:inline-block;"></span>
+                                }
+
+                                @switch (m.MessageType)
+                                {
+                                    case RankArena.Models.Entities.AdminMessageType.TurnuvaReddedildi:
+                                        <span style="background:rgba(255,60,60,0.15); color:#ff6b6b; padding:3px 10px; border-radius:6px; font-size:0.75rem; font-weight:700;">🚫 Reddedildi</span>
+                                        break;
+                                    case RankArena.Models.Entities.AdminMessageType.TurnuvaYayindanKaldirildi:
+                                        <span style="background:rgba(255,176,32,0.15); color:#ffc040; padding:3px 10px; border-radius:6px; font-size:0.75rem; font-weight:700;">⚠️ Yayından Kaldırıldı</span>
+                                        break;
+                                    case RankArena.Models.Entities.AdminMessageType.TurnuvaSilindi:
+                                        <span style="background:rgba(255,255,255,0.1); color:rgba(233,236,255,0.7); padding:3px 10px; border-radius:6px; font-size:0.75rem; font-weight:700;">🗑️ Silindi</span>
+                                        break;
+                                    case RankArena.Models.Entities.AdminMessageType.GenelBilgilendirme:
+                                        <span style="background:rgba(56,189,248,0.15); color:#7dd3fc; padding:3px 10px; border-radius:6px; font-size:0.75rem; font-weight:700;">ℹ️ Bilgilendirme</span>
+                                        break;
+                                }
+
+                                <span style="font-weight:800; font-size:1rem;">@m.Subject</span>
+                            </div>
+
+                            <div style="color:rgba(233,236,255,0.55); font-size:0.85rem; margin-top:4px; max-width:600px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                @m.Content
+                            </div>
+
+                            @if (m.Tournament != null)
+                            {
+                                <div style="margin-top:6px;">
+                                    <span style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); padding:2px 10px; border-radius:6px; font-size:0.75rem; color:rgba(233,236,255,0.6);">
+                                        🏆 @m.Tournament.Title
+                                    </span>
+                                </div>
+                            }
+                        </div>
+
+                        <div style="text-align:right; white-space:nowrap;">
+                            <div style="color:rgba(233,236,255,0.4); font-size:0.8rem;">
+                                @m.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")
+                            </div>
+                            <div style="color:rgba(233,236,255,0.3); font-size:0.75rem;">
+                                @m.CreatedAt.ToLocalTime().ToString("HH:mm")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        }
+    }
+</div>

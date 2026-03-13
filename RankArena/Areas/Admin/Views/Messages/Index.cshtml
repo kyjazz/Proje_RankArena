@@ -1,0 +1,113 @@
+﻿@model List<RankArena.Models.Entities.AdminMessage>
+@{
+    ViewData["Title"] = "Gönderilen Mesajlar";
+    var userNames = ViewBag.UserNames as Dictionary<string, string> ?? new Dictionary<string, string>();
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h2 class="mb-1 fw-bold">📩 Gönderilen Mesajlar</h2>
+        <div class="muted">Admin olarak kullanıcılara gönderdiğiniz tüm mesajlar.</div>
+    </div>
+    <span class="badge badge-soft px-3 py-2">Toplam: @Model.Count</span>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success glass">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger glass">@TempData["Error"]</div>
+}
+
+<div class="glass p-3">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div class="fs-4 fw-semibold">Henüz mesaj gönderilmemiş.</div>
+            <div class="muted mt-2">Turnuva yönetimi sırasında kullanıcılara mesaj gönderebilirsiniz.</div>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-darkish table-striped table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Alıcı</th>
+                        <th>Tür</th>
+                        <th>Başlık</th>
+                        <th>Turnuva</th>
+                        <th>Durum</th>
+                        <th>Tarih</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var m in Model)
+                    {
+                        var userName = userNames.ContainsKey(m.ReceiverUserId)
+                            ? userNames[m.ReceiverUserId]
+                            : "Bilinmiyor";
+
+                        <tr>
+                            <td>
+                                <span class="fw-bold">@userName</span>
+                            </td>
+
+                            <td>
+                                @switch (m.MessageType)
+                                {
+                                    case RankArena.Models.Entities.AdminMessageType.TurnuvaReddedildi:
+                                        <span class="badge bg-danger">Reddedildi</span>
+                                        break;
+                                    case RankArena.Models.Entities.AdminMessageType.TurnuvaYayindanKaldirildi:
+                                        <span class="badge bg-warning text-dark">Yayından Kaldırıldı</span>
+                                        break;
+                                    case RankArena.Models.Entities.AdminMessageType.TurnuvaSilindi:
+                                        <span class="badge bg-dark">Silindi</span>
+                                        break;
+                                    case RankArena.Models.Entities.AdminMessageType.GenelBilgilendirme:
+                                        <span class="badge bg-info text-dark">Bilgilendirme</span>
+                                        break;
+                                }
+                            </td>
+
+                            <td>
+                                <div class="fw-semibold" style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                    @m.Subject
+                                </div>
+                            </td>
+
+                            <td>
+                                @if (m.Tournament != null)
+                                {
+                                    <span class="badge bg-dark border">@m.Tournament.Title</span>
+                                }
+                                else
+                                {
+                                    <span class="muted">—</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (m.IsRead)
+                                {
+                                    <span class="badge bg-success">Okundu</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Okunmadı</span>
+                                }
+                            </td>
+
+                            <td>
+                                <small class="muted">@m.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

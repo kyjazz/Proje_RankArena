@@ -35,6 +35,9 @@ public class AppDbContext : IdentityDbContext<IdentityUser, IdentityRole, string
     // PUAN (RATING)
     public DbSet<TournamentRating> TournamentRatings => Set<TournamentRating>();
 
+    // ✅ ADMİN MESAJLARI
+    public DbSet<AdminMessage> AdminMessages => Set<AdminMessage>();
+
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -296,5 +299,32 @@ public class AppDbContext : IdentityDbContext<IdentityUser, IdentityRole, string
         b.Entity<TournamentRating>()
             .HasIndex(x => new { x.TournamentId, x.UserId })
             .IsUnique();
+
+        // -------------------------------------------------
+        // ✅ ADMİN MESAJLARI
+        // -------------------------------------------------
+        b.Entity<AdminMessage>()
+            .Property(x => x.ReceiverUserId)
+            .IsRequired();
+
+        b.Entity<AdminMessage>()
+            .Property(x => x.Subject)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        b.Entity<AdminMessage>()
+            .Property(x => x.Content)
+            .IsRequired()
+            .HasMaxLength(2000);
+
+        b.Entity<AdminMessage>()
+            .HasOne(x => x.Tournament)
+            .WithMany()
+            .HasForeignKey(x => x.TournamentId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        b.Entity<AdminMessage>()
+            .Property(x => x.IsRead)
+            .HasDefaultValue(false);
     }
 }

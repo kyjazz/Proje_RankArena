@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿﻿
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8" />
@@ -102,6 +103,47 @@
         .muted {
             color: var(--muted);
         }
+
+        .form-control, .form-select {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: var(--text);
+            border-radius: 10px;
+        }
+
+            .form-control:focus, .form-select:focus {
+                background: rgba(255,255,255,0.08);
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px rgba(255,176,32,0.10);
+                color: var(--text);
+            }
+
+            .form-control::placeholder {
+                color: rgba(233,236,255,0.4);
+            }
+
+            .form-select option {
+                background: #0b1640;
+                color: var(--text);
+            }
+
+        .alert-success {
+            background: rgba(34,197,94,0.12);
+            border-color: rgba(34,197,94,0.25);
+            color: #86efac;
+        }
+
+        .alert-danger {
+            background: rgba(255,45,85,0.12);
+            border-color: rgba(255,45,85,0.25);
+            color: #fca5a5;
+        }
+
+        .alert-info {
+            background: rgba(56,189,248,0.12);
+            border-color: rgba(56,189,248,0.25);
+            color: #7dd3fc;
+        }
     </style>
 </head>
 <body>
@@ -111,8 +153,11 @@
             <a class="navbar-brand brand" href="/">RankArena <span class="muted">Admin</span></a>
 
             <div class="ms-auto d-flex gap-2">
-                <a class="btn btn-sm navbtn" href="/Admin/Tournaments/Pending">Onay Bekleyenler</a>
-                <a class="btn btn-sm navbtn" href="/MyTournaments">Benim Turnuvalarım</a>
+                <a class="btn btn-sm navbtn" href="/Admin/Tournaments/Pending">⏳ Onay Bekleyenler</a>
+                <a class="btn btn-sm navbtn" href="/Admin/Tournaments/All">📋 Tüm Turnuvalar</a>
+                <a class="btn btn-sm navbtn" href="/Admin/Messages">📩 Mesajlar</a>
+                <a class="btn btn-sm navbtn" href="/Admin/Categories">📂 Kategoriler</a>
+                <a class="btn btn-sm navbtn" href="/MyTournaments">🏠 Siteye Dön</a>
             </div>
         </div>
     </nav>
