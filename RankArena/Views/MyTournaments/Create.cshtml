@@ -1,40 +1,107 @@
-﻿﻿@using RankArena.Models.Entities
+﻿﻿﻿@using RankArena.Models.Entities
 @{
 }
 
-<h2>Turnuva Oluştur</h2>
+<style>
+    .create-form .form-label {
+        color: #e9ecff;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
 
-<form method="post">
-    @Html.AntiForgeryToken()
+    .create-form .form-control,
+    .create-form textarea.form-control {
+        background: rgba(10, 12, 20, 0.85);
+        color: #e9ecff;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 10px;
+    }
 
-    <div class="mb-2">
-        <label class="form-label">Başlık</label>
-        <input class="form-control" name="title" />
-    </div>
+        .create-form .form-control:focus,
+        .create-form textarea.form-control:focus {
+            background: rgba(10, 12, 20, 0.95);
+            color: #ffffff;
+            border-color: #ffb020;
+            box-shadow: 0 0 0 3px rgba(255,176,32,0.15);
+        }
 
-    <div class="mb-2">
-        <label class="form-label">Açıklama</label>
-        <textarea class="form-control" name="description"></textarea>
-    </div>
+        .create-form .form-control::placeholder {
+            color: rgba(233,236,255,0.4);
+        }
 
-    <div class="mb-2">
-        <label class="form-label">Kapak Görsel URL (opsiyon)</label>
-        <input class="form-control" name="coverImageUrl" />
-    </div>
+    .create-form select.form-control {
+        background: rgba(10, 12, 20, 0.85);
+        color: #e9ecff;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 10px;
+    }
 
-    <div class="mb-2">
-        <label class="form-label">Kategori</label>
-        <select class="form-control" name="categoryId">
-            <option value="">-- Kategori Seçin (opsiyonel) --</option>
-            @if (ViewBag.Categories != null)
-            {
-                foreach (Category c in ViewBag.Categories)
-                {
-                    <option value="@c.Id">@c.Name</option>
-                }
+        .create-form select.form-control:focus {
+            background: rgba(10, 12, 20, 0.95);
+            color: #ffffff;
+            border-color: #ffb020;
+            box-shadow: 0 0 0 3px rgba(255,176,32,0.15);
+        }
+
+        .create-form select.form-control option {
+            background: #0b1640;
+            color: #e9ecff;
+            padding: 8px;
+        }
+
+            .create-form select.form-control option:checked {
+                background: #1a2566;
+                color: #ffffff;
             }
-        </select>
-    </div>
 
-    <button class="btn btn-primary" type="submit">Kaydet (Onay Bekler)</button>
-</form>
+            .create-form select.form-control option:hover {
+                background: #1e2d6d;
+                color: #ffffff;
+            }
+
+    .create-form h2 {
+        color: #e9ecff;
+        font-weight: 800;
+    }
+</style>
+
+<div class="create-form">
+    <h2>Turnuva Oluştur</h2>
+
+    <form method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="mb-2">
+            <label class="form-label">Başlık</label>
+            <input class="form-control" name="title" placeholder="Turnuva başlığı girin..." />
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label">Açıklama</label>
+            <textarea class="form-control" name="description" placeholder="Turnuva açıklaması girin..."></textarea>
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label">Kapak Görsel URL (opsiyon)</label>
+            <input class="form-control" name="coverImageUrl" placeholder="https://..." />
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label">Kategori</label>
+            <select class="form-control" name="categoryId">
+                <option value="">-- Kategori Seçin (opsiyonel) --</option>
+                @if (ViewBag.Categories != null)
+                {
+                    foreach (Category c in ViewBag.Categories)
+                    {
+                        <option value="@c.Id">@c.Name</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <button class="btn btn-primary mt-2" type="submit" style="background:#ffb020; border:none; color:#070b1a; font-weight:700; padding:10px 28px; border-radius:10px;">
+            Kaydet (Onay Bekler)
+        </button>
+    </form>
+</div>

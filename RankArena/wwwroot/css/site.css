@@ -1,22 +1,112 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
+}
+
+/* ========== DARK THEME TABLE FIX ========== */
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #e9ecff;
+    --bs-table-border-color: rgba(255,255,255,0.06);
+    --bs-table-striped-bg: rgba(255,255,255,0.03);
+    --bs-table-striped-color: #e9ecff;
+    --bs-table-hover-bg: rgba(255,255,255,0.06);
+    --bs-table-hover-color: #ffffff;
+    color: #e9ecff;
+}
+
+    .table thead th {
+        background: rgba(20, 23, 35, 0.95) !important;
+        color: #ffb020 !important;
+        border-bottom: 2px solid rgba(255,176,32,0.2) !important;
+        font-weight: 700;
+    }
+
+    .table td {
+        color: #e9ecff !important;
+        border-bottom-color: rgba(255,255,255,0.05) !important;
+    }
+
+.table-dark {
+    --bs-table-bg: rgba(20, 23, 35, 0.95);
+    --bs-table-color: #ffb020;
+    --bs-table-border-color: rgba(255,176,32,0.2);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-bg-type: rgba(255,255,255,0.02);
+    color: #e9ecff;
+}
+
+.table-bordered > :not(caption) > * > * {
+    border-color: rgba(255,255,255,0.06);
+}
+
+/* ========== DARK THEME FORM & SELECT FIX ========== */
+.form-control,
+.form-select,
+select.form-control {
+    background-color: rgba(10, 12, 20, 0.85) !important;
+    color: #e9ecff !important;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+}
+
+    .form-control:focus,
+    .form-select:focus,
+    select.form-control:focus {
+        background-color: rgba(10, 12, 20, 0.95) !important;
+        color: #ffffff !important;
+        border-color: #ffb020 !important;
+        box-shadow: 0 0 0 3px rgba(255,176,32,0.15) !important;
+    }
+
+    .form-control::placeholder {
+        color: rgba(233,236,255,0.4) !important;
+    }
+
+    /* ========== SELECT DROPDOWN OPTION FIX ========== */
+    select.form-control option,
+    .form-select option {
+        background: #0b1640 !important;
+        color: #e9ecff !important;
+        padding: 8px 12px;
+    }
+
+        select.form-control option:checked,
+        .form-select option:checked {
+            background: #1a2566 !important;
+            color: #ffffff !important;
+        }
+
+/* ========== TEXT VISIBILITY FIXES ========== */
+.text-muted {
+    color: rgba(233,236,255,0.55) !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #e9ecff;
+}
+
+.form-label {
+    color: #e9ecff;
+    font-weight: 600;
 }

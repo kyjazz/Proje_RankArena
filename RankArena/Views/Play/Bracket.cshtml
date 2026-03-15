@@ -56,7 +56,7 @@
             color: #e9ecff;
         }
 
-        /* ========== ARKA PLAN BULANIK KAPAK ========== */
+        /* ========== ARKA PLAN: İKİYE BÖLÜNMÜŞ BULANIK KAPAK ========== */
         .bg-blur {
             position: fixed;
             inset: 0;
@@ -67,14 +67,30 @@
             flex: 1;
             background-size: cover;
             background-position: center;
-            filter: blur(28px) brightness(0.35) saturate(1.3);
-            transform: scale(1.15);
+            filter: blur(32px) brightness(0.30) saturate(1.4);
+            transform: scale(1.2);
+        }
+        .bg-divider {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            z-index: 1;
+            background: linear-gradient(to bottom,
+                transparent 0%,
+                rgba(255,176,32,0.15) 15%,
+                rgba(255,176,32,0.25) 50%,
+                rgba(255,176,32,0.15) 85%,
+                transparent 100%);
+            pointer-events: none;
         }
         .bg-overlay {
             position: fixed;
             inset: 0;
             z-index: 1;
-            background: radial-gradient(ellipse at 50% 0%, rgba(10,14,26,0.3), rgba(10,14,26,0.85) 70%);
+            background: radial-gradient(ellipse at 50% 0%, rgba(10,14,26,0.2), rgba(10,14,26,0.75) 70%);
             pointer-events: none;
         }
 
@@ -142,13 +158,22 @@
             align-items: center;
             justify-content: center;
             gap: 0;
-            padding: 12px 20px;
+            padding: 12px 0;
             min-height: 0;
+        }
+
+        /* Her yarı kendi kartını ortalar */
+        .arena-half {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
         }
 
         /* ========== KARTLAR ========== */
         .match-card {
-            flex: 1;
+            width: 100%;
             max-width: 520px;
             border-radius: 16px;
             overflow: hidden;
@@ -321,10 +346,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 100px;
+            width: 80px;
             flex-shrink: 0;
             z-index: 5;
-            margin: 0 -10px;
         }
         .vs-icon {
             width: 72px; height: 72px;
@@ -403,13 +427,16 @@
                 gap: 10px;
                 padding: 8px 12px;
             }
+            .arena-half {
+                width: 100%;
+                padding: 0;
+            }
             .match-card {
                 max-width: 100%;
                 width: 100%;
             }
             .vs-area {
                 width: auto;
-                margin: -8px 0;
                 flex-direction: row;
                 gap: 8px;
             }
@@ -417,6 +444,16 @@
             .vs-icon .bolt { font-size: 36px; line-height: 48px; }
             .vs-text { font-size: 14px; margin-top: 0; }
             .card-media { aspect-ratio: 16/9; }
+            .bg-blur { flex-direction: column; }
+            .bg-divider {
+                top: 50%; left: 0; right: 0; bottom: auto;
+                width: 100%; height: 2px;
+                transform: translateY(-50%);
+                background: linear-gradient(to right,
+                    transparent 0%, rgba(255,176,32,0.15) 15%,
+                    rgba(255,176,32,0.25) 50%, rgba(255,176,32,0.15) 85%,
+                    transparent 100%);
+            }
         }
     </style>
 </head>
@@ -442,11 +479,12 @@
     string quizeiPill = $"{roundLabel} • {completedInRound + 1}/{matchesInRound}";
 }
 
-<!-- Arka plan bulanık kapak resimleri -->
+<!-- Arka plan: İkiye bölünmüş bulanık kapak görselleri -->
 <div class="bg-blur">
     <div class="bg-blur-half" style="background-image: url('@bgLeft');"></div>
     <div class="bg-blur-half" style="background-image: url('@bgRight');"></div>
 </div>
+<div class="bg-divider"></div>
 <div class="bg-overlay"></div>
 
 <div class="scene">
@@ -474,33 +512,35 @@
     <!-- Arena -->
     <div class="arena">
 
-        <!-- ==================== SOL KART ==================== -->
-        <div class="match-card left-card" id="leftCard">
-            <div class="card-media">
-                @if (leftHasImage)
-                {
-                    <!-- Sadece resim -->
-                    <img src="@left!.ImageUrl" alt="@left?.Name" class="thumb-img" />
-                }
-                else if (leftShowVideo)
-                {
-                    <!-- Video: thumbnail + play butonu + gizli iframe -->
-                    <div class="video-container" id="videoLeft">
-                        <img src="https://img.youtube.com/vi/@(left!.YouTubeVideoId)/hqdefault.jpg"
-                             alt="@left?.Name" class="video-thumb" />
-                        <button type="button" class="play-btn" onclick="playVideo('videoLeft', '@left!.YouTubeVideoId')"></button>
-                        <iframe id="iframeLeft" allowfullscreen allow="autoplay"></iframe>
-                    </div>
-                }
-                else
-                {
-                    <div class="no-media">Görsel/Video yok</div>
-                }
-            </div>
-            <div class="card-label">
-                <button type="button" class="select-btn" onclick="selectCard('left')">
-                    @left?.Name
-                </button>
+        <!-- ===== SOL YARI ===== -->
+        <div class="arena-half">
+            <div class="match-card left-card" id="leftCard">
+                <div class="card-media">
+                    @if (leftHasImage)
+                    {
+                        <!-- Sadece resim -->
+                        <img src="@left!.ImageUrl" alt="@left?.Name" class="thumb-img" />
+                    }
+                    else if (leftShowVideo)
+                    {
+                        <!-- Video: thumbnail + play butonu + gizli iframe -->
+                        <div class="video-container" id="videoLeft">
+                            <img src="https://img.youtube.com/vi/@(left!.YouTubeVideoId)/hqdefault.jpg"
+                                 alt="@left?.Name" class="video-thumb" />
+                            <button type="button" class="play-btn" onclick="playVideo('videoLeft', '@left!.YouTubeVideoId')"></button>
+                            <iframe id="iframeLeft" allowfullscreen allow="autoplay"></iframe>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="no-media">Görsel/Video yok</div>
+                    }
+                </div>
+                <div class="card-label">
+                    <button type="button" class="select-btn" onclick="selectCard('left')">
+                        @left?.Name
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -512,31 +552,33 @@
             <div class="vs-text">VS</div>
         </div>
 
-        <!-- ==================== SAĞ KART ==================== -->
-        <div class="match-card right-card" id="rightCard">
-            <div class="card-media">
-                @if (rightHasImage)
-                {
-                    <img src="@right!.ImageUrl" alt="@right?.Name" class="thumb-img" />
-                }
-                else if (rightShowVideo)
-                {
-                    <div class="video-container" id="videoRight">
-                        <img src="https://img.youtube.com/vi/@(right!.YouTubeVideoId)/hqdefault.jpg"
-                             alt="@right?.Name" class="video-thumb" />
-                        <button type="button" class="play-btn" onclick="playVideo('videoRight', '@right!.YouTubeVideoId')"></button>
-                        <iframe id="iframeRight" allowfullscreen allow="autoplay"></iframe>
-                    </div>
-                }
-                else
-                {
-                    <div class="no-media">Görsel/Video yok</div>
-                }
-            </div>
-            <div class="card-label">
-                <button type="button" class="select-btn" onclick="selectCard('right')">
-                    @right?.Name
-                </button>
+        <!-- ===== SAĞ YARI ===== -->
+        <div class="arena-half">
+            <div class="match-card right-card" id="rightCard">
+                <div class="card-media">
+                    @if (rightHasImage)
+                    {
+                        <img src="@right!.ImageUrl" alt="@right?.Name" class="thumb-img" />
+                    }
+                    else if (rightShowVideo)
+                    {
+                        <div class="video-container" id="videoRight">
+                            <img src="https://img.youtube.com/vi/@(right!.YouTubeVideoId)/hqdefault.jpg"
+                                 alt="@right?.Name" class="video-thumb" />
+                            <button type="button" class="play-btn" onclick="playVideo('videoRight', '@right!.YouTubeVideoId')"></button>
+                            <iframe id="iframeRight" allowfullscreen allow="autoplay"></iframe>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="no-media">Görsel/Video yok</div>
+                    }
+                </div>
+                <div class="card-label">
+                    <button type="button" class="select-btn" onclick="selectCard('right')">
+                        @right?.Name
+                    </button>
+                </div>
             </div>
         </div>
 

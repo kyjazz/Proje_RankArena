@@ -45,9 +45,9 @@
             <table class="table table-darkish table-striped table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th style="width:40%;">Başlık</th>
+                        <th style="width:35%;">Başlık</th>
                         <th>Slug</th>
-                        <th style="width:320px;">İşlem</th>
+                        <th style="width:400px;">İşlem</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -65,7 +65,7 @@
                                 <span class="badge bg-dark border">@t.Slug</span>
                             </td>
 
-                            <td class="d-flex gap-2">
+                            <td class="d-flex gap-2 flex-wrap">
                                 <form method="post"
                                       asp-area="Admin"
                                       asp-controller="Tournaments"
@@ -81,8 +81,14 @@
                                     Önizle
                                 </a>
 
+                                <!-- ✅ MESAJ GÖNDER BUTONU -->
+                                <button type="button" class="btn btn-outline-info btn-sm px-3"
+                                        onclick="showPendingMessageModal(@t.Id, '@t.Title.Replace("'", "\\'")' )">
+                                    📩 Mesaj
+                                </button>
+
                                 <button type="button" class="btn btn-outline-danger btn-sm px-3"
-                                        onclick="showAdminDeleteModal(@t.Id, '@t.Title.Replace("'", "\\'")')">
+                                        onclick="showAdminDeleteModal(@t.Id, '@t.Title.Replace("'", "\\'")' )">
                                     🗑️ Sil
                                 </button>
                             </td>
@@ -94,7 +100,94 @@
     }
 </div>
 
-<!-- ADMİN SİLME ONAY MODALI -->
+<!-- ===================== MESAJ GÖNDER MODALI ===================== -->
+<div id="pendingMessageModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#0f1428; border:1px solid rgba(56,189,248,0.3); border-radius:18px; padding:28px; max-width:540px; width:92%;">
+        <h5 style="color:#e9ecff; font-weight:800; margin-bottom:4px;">📩 Kullanıcıya Mesaj Gönder</h5>
+        <p style="color:rgba(233,236,255,0.5); font-size:0.85rem; margin-bottom:18px;">
+            <strong id="pendingMsgTournamentName" style="color:#ffb020;"></strong> turnuvasının sahibine mesaj gönderin.
+        </p>
+
+        <form id="pendingMessageForm" method="post" asp-area="Admin" asp-controller="Messages" asp-action="SendQuick">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="tournamentId" id="pendingMsgTournamentId" />
+            <input type="hidden" name="returnUrl" value="/Admin/Tournaments/Pending" />
+
+            <div style="margin-bottom:14px;">
+                <label style="font-weight:700; font-size:0.85rem; color:rgba(233,236,255,0.85); margin-bottom:6px; display:block;">Mesaj Türü / Sebep</label>
+                <select name="messageType" class="form-select" id="pendingMsgType"
+                        style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e9ecff; border-radius:10px;"
+                        onchange="updatePendingTemplate()">
+                    <option value="1">🚫 Turnuva Reddedildi</option>
+                    <option value="2">⚠️ Yayından Kaldırıldı</option>
+                    <option value="3">🗑️ Turnuva Silindi</option>
+                    <option value="4" selected>ℹ️ Genel Bilgilendirme</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom:6px;">
+                <label style="font-weight:700; font-size:0.85rem; color:rgba(233,236,255,0.85); margin-bottom:6px; display:block;">Hızlı Şablon (opsiyonel)</label>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+                    <button type="button" class="btn btn-outline-warning btn-sm" style="font-size:0.75rem;"
+                            onclick="setTemplate('Turnuvanız sitemize uygun içerik taşımadığı için reddedilmiştir. Lütfen site kurallarına uygun bir turnuva oluşturun.')">
+                        Siteye uygun değil
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm" style="font-size:0.75rem;"
+                            onclick="setTemplate('Turnuvanızda rahatsız edici / uygunsuz içerik tespit edilmiştir. Bu nedenle turnuvanız onaylanamamıştır. Lütfen içerikleri düzenleyerek tekrar gönderin.')">
+                        Rahatsız edici içerik
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm" style="font-size:0.75rem;"
+                            onclick="setTemplate('Turnuvanızda yeterli sayıda item bulunmamaktadır. En az 4 item eklemeniz gerekmektedir. Lütfen item ekleyerek tekrar yayın talebinde bulunun.')">
+                        Eksik item
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm" style="font-size:0.75rem;"
+                            onclick="setTemplate('Turnuvanızın başlığı ve/veya açıklaması yetersiz veya anlamsızdır. Lütfen daha açıklayıcı bir başlık ve açıklama yazarak tekrar gönderin.')">
+                        Yetersiz başlık/açıklama
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm" style="font-size:0.75rem;"
+                            onclick="setTemplate('Turnuvanızda telif hakkı ihlali tespit edilmiştir. Lütfen telif haklarına uygun görseller/içerikler kullanarak tekrar oluşturun.')">
+                        Telif hakkı ihlali
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm" style="font-size:0.75rem;"
+                            onclick="setTemplate('Turnuvanızda yer alan görseller kırık veya yüklenemez durumda. Lütfen görselleri kontrol edip düzelterek tekrar gönderin.')">
+                        Kırık görseller
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm" style="font-size:0.75rem;"
+                            onclick="setTemplate('Aynı/benzer konuda başka bir turnuva zaten mevcut. Lütfen farklı bir konu veya açıyla turnuva oluşturun.')">
+                        Tekrar / mükerrer
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm" style="font-size:0.75rem;"
+                            onclick="setTemplate('Turnuvanız spam veya reklam niteliği taşıdığı için reddedilmiştir.')">
+                        Spam / reklam
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label style="font-weight:700; font-size:0.85rem; color:rgba(233,236,255,0.85); margin-bottom:6px; display:block;">Mesaj İçeriği</label>
+                <textarea name="content" id="pendingMsgContent" rows="5" class="form-control" maxlength="2000" required
+                          style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#e9ecff; border-radius:10px;"
+                          placeholder="Turnuvanın neden reddedildiğini / eksiklerini açıklayın..."></textarea>
+                <div style="text-align:right; margin-top:4px;">
+                    <small class="muted"><span id="pendingCharCount">0</span> / 2000</small>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:12px; justify-content:flex-end;">
+                <button type="button" onclick="hidePendingMessageModal()"
+                        style="background:none; border:1px solid rgba(255,255,255,0.2); color:rgba(233,236,255,0.7); font-weight:600; padding:10px 24px; border-radius:10px; font-size:0.9rem; cursor:pointer;">
+                    İptal
+                </button>
+                <button type="submit"
+                        style="background:linear-gradient(90deg,#ffb020,#ff5b3a); color:#0b1024; font-weight:700; border:none; padding:10px 28px; border-radius:10px; font-size:0.9rem; cursor:pointer;">
+                    📨 Gönder
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===================== ADMİN SİLME ONAY MODALI ===================== -->
 <div id="adminDeleteModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:#0f1428; border:1px solid rgba(255,100,100,0.3); border-radius:16px; padding:28px; max-width:420px; width:90%; text-align:center;">
         <h5 style="color:#e9ecff; font-weight:800; margin-bottom:10px;">🗑️ Turnuvayı Sil (Admin)</h5>
@@ -120,6 +213,60 @@
 </div>
 
 <script>
+    // ===== MESAJ MODAL =====
+    function showPendingMessageModal(id, title) {
+        document.getElementById('pendingMsgTournamentId').value = id;
+        document.getElementById('pendingMsgTournamentName').textContent = title;
+        document.getElementById('pendingMsgContent').value = '';
+        document.getElementById('pendingCharCount').textContent = '0';
+        document.getElementById('pendingMessageModal').style.display = 'flex';
+    }
+    function hidePendingMessageModal() {
+        document.getElementById('pendingMessageModal').style.display = 'none';
+    }
+    document.getElementById('pendingMessageModal').addEventListener('click', function (e) {
+        if (e.target === this) hidePendingMessageModal();
+    });
+
+    // Hızlı şablon
+    function setTemplate(text) {
+        var textarea = document.getElementById('pendingMsgContent');
+        textarea.value = text;
+        document.getElementById('pendingCharCount').textContent = text.length;
+        textarea.focus();
+    }
+
+    // Karakter sayacı
+    document.getElementById('pendingMsgContent').addEventListener('input', function () {
+        document.getElementById('pendingCharCount').textContent = this.value.length;
+    });
+
+    // Mesaj türü değiştiğinde otomatik şablon önerisi
+    function updatePendingTemplate() {
+        var type = document.getElementById('pendingMsgType').value;
+        var textarea = document.getElementById('pendingMsgContent');
+
+        // Eğer textarea boşsa otomatik şablon koy
+        if (textarea.value.trim() === '') {
+            switch (type) {
+                case '1':
+                    setTemplate('Turnuvanız incelendi ancak site kurallarına uygun bulunmadığı için reddedilmiştir. Detaylı bilgi için lütfen site kurallarını inceleyin.');
+                    break;
+                case '2':
+                    setTemplate('Turnuvanız yayından kaldırılmıştır. Kurallarımıza uygun düzenlemeler yaptıktan sonra tekrar yayın talebinde bulunabilirsiniz.');
+                    break;
+                case '3':
+                    setTemplate('Turnuvanız site kurallarına aykırılık nedeniyle kalıcı olarak silinmiştir.');
+                    break;
+                case '4':
+                    textarea.value = '';
+                    document.getElementById('pendingCharCount').textContent = '0';
+                    break;
+            }
+        }
+    }
+
+    // ===== SİLME MODAL =====
     function showAdminDeleteModal(id, title) {
         document.getElementById('adminDeleteId').value = id;
         document.getElementById('adminDeleteName').textContent = title;

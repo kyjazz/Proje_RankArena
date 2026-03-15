@@ -39,6 +39,20 @@
     .edit-muted {
         color: rgba(233,236,255,0.55);
     }
+
+    .item-count-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,176,32,0.12);
+        border: 1px solid rgba(255,176,32,0.3);
+        color: #ffb020;
+        font-size: 0.85rem;
+        font-weight: 700;
+        padding: 4px 14px;
+        border-radius: 999px;
+        margin-left: 10px;
+    }
 </style>
 
 <div class="d-flex align-items-center justify-content-between mb-3">
@@ -155,7 +169,10 @@ else
 </div>
 
 <div class="edit-panel p-3">
-    <h4 class="text-light">Mevcut Itemlar</h4>
+    <div class="d-flex align-items-center mb-2">
+        <h4 class="text-light mb-0">Mevcut Itemlar</h4>
+        <span class="item-count-badge">📦 @Model.Items.Count() adet</span>
+    </div>
 
     @if (!Model.Items.Any())
     {
