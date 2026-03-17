@@ -55,9 +55,18 @@
                     {
                         <tr>
                             <td>
-                                <div class="fw-bold">@t.Title</div>
+                                <div class="fw-bold" style="color:#e9ecff;">@t.Title</div>
                                 <div class="muted" style="font-size:12px;">
                                     Oluşturma: @t.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                                </div>
+                                @{
+                                    var userNames = ViewBag.UserNames as Dictionary<string, string>;
+                                    var creatorName = (t.CreatedByUserId != null && userNames != null && userNames.ContainsKey(t.CreatedByUserId))
+                                    ? userNames[t.CreatedByUserId]
+                                    : "Bilinmiyor";
+                                }
+                                <div style="font-size:11px; color:#ffb020; margin-top:2px;">
+                                    👤 @creatorName
                                 </div>
                             </td>
 

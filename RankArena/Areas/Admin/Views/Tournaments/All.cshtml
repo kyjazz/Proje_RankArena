@@ -133,6 +133,15 @@
                             <td>
                                 <div class="admin-title">@t.Title</div>
                                 <div class="admin-slug">@t.Slug</div>
+                                @{
+                                    var userNames = ViewBag.UserNames as Dictionary<string, string>;
+                                    var creatorName = (t.CreatedByUserId != null && userNames != null && userNames.ContainsKey(t.CreatedByUserId))
+                                    ? userNames[t.CreatedByUserId]
+                                    : "Bilinmiyor";
+                                }
+                                <div style="font-size:11px; color:#ffb020; margin-top:2px;">
+                                    👤 @creatorName
+                                </div>
                             </td>
 
                             <td>

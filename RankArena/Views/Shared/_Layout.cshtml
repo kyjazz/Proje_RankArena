@@ -74,10 +74,11 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                padding: 0 16px;
+                padding: 0 12px;
                 height: 56px;
                 max-width: 1400px;
                 margin: 0 auto;
+                gap: 8px;
             }
 
         .brand {
@@ -103,24 +104,28 @@
         .nav-center {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 2px;
+            flex-shrink: 1;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .nav-item-link {
             color: var(--muted);
             text-decoration: none;
-            padding: 8px 16px;
+            padding: 6px 10px;
             border-radius: 8px;
-            font-size: 0.82rem;
+            font-size: 0.75rem;
             font-weight: 700;
             transition: all .15s ease;
             white-space: nowrap;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 2px;
+            flex-shrink: 0;
         }
 
             .nav-item-link .nav-icon {
@@ -374,15 +379,7 @@
                         TURNUVALARIM
                     </a>
 
-                    <!-- ✅ MESAJLARIM LİNKİ -->
-                    <a class="nav-item-link" href="/MyMessages" style="position:relative;">
-                        <span class="nav-icon">📬</span>
-                        MESAJLARIM
-                        @if (unreadMessageCount > 0)
-                        {
-                            <span class="msg-badge">@unreadMessageCount</span>
-                        }
-                    </a>
+                   
                 }
                 @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
                 {

@@ -27,6 +27,16 @@ public class TournamentsController : Controller
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
 
+        // Kullanıcı adlarını çek
+        var userIds = list.Where(x => x.CreatedByUserId != null).Select(x => x.CreatedByUserId!).Distinct().ToList();
+        var userNames = new Dictionary<string, string>();
+        foreach (var uid in userIds)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid);
+            if (user != null) userNames[uid] = user.UserName ?? "Bilinmiyor";
+        }
+        ViewBag.UserNames = userNames;
+
         return View(list);
     }
 
@@ -38,6 +48,16 @@ public class TournamentsController : Controller
             .Include(x => x.Category)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
+
+        // Kullanıcı adlarını çek
+        var userIds = list.Where(x => x.CreatedByUserId != null).Select(x => x.CreatedByUserId!).Distinct().ToList();
+        var userNames = new Dictionary<string, string>();
+        foreach (var uid in userIds)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid);
+            if (user != null) userNames[uid] = user.UserName ?? "Bilinmiyor";
+        }
+        ViewBag.UserNames = userNames;
 
         return View(list);
     }

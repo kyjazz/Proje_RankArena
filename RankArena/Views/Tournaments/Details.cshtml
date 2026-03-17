@@ -1219,13 +1219,24 @@
                             @if (Model.ActiveItemCount >= 8)
                             {
                                 <a href="/Play/Start?slug=@t.Slug&mode=bracket&value=8" class="btn-mode">8</a>
+                            }
+                            @if (Model.ActiveItemCount >= 16)
+                            {
                                 <a href="/Play/Start?slug=@t.Slug&mode=bracket&value=16" class="btn-mode">16</a>
                             }
-                            else if (Model.ActiveItemCount >= 2)
+                            @if (Model.ActiveItemCount >= 32)
+                            {
+                                <a href="/Play/Start?slug=@t.Slug&mode=bracket&value=32" class="btn-mode">32</a>
+                            }
+                            @if (Model.ActiveItemCount >= 64)
+                            {
+                                <a href="/Play/Start?slug=@t.Slug&mode=bracket&value=64" class="btn-mode">64</a>
+                            }
+                            @if (Model.ActiveItemCount >= 2 && Model.ActiveItemCount < 8)
                             {
                                 <a href="/Play/Start?slug=@t.Slug&mode=bracket&value=@Model.ActiveItemCount" class="btn-mode">Başla</a>
                             }
-                            else
+                            @if (Model.ActiveItemCount < 2)
                             {
                                 <span style="color:rgba(255,100,100,0.7);font-size:0.72rem;">En az 2 item gerekli</span>
                             }

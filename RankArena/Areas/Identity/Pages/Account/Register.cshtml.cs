@@ -104,7 +104,7 @@ namespace RankArena.Areas.Identity.Pages.Account
             await _emailStore.SetEmailAsync(user, Input.Email.Trim(), CancellationToken.None);
 
             // Projede ConfirmedAccount zorunlu değil; giriş sorunlarını azaltmak için true
-            user.EmailConfirmed = true;
+            user.EmailConfirmed = false;
 
             var result = await _userManager.CreateAsync(user, Input.Password);
             if (result.Succeeded)
