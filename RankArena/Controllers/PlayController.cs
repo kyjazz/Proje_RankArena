@@ -250,8 +250,32 @@ public class PlayController : Controller
             CreatedAt = DateTime.UtcNow
         });
 
-        await PlaceWinnerToNextMatchAsync(run, match);
         await _db.SaveChangesAsync();
+
+        // ✅ Bu turun tüm maçları bitti mi kontrol et
+        var currentRound = match.Round;
+        var totalSlots = run.TotalSlots ?? 0;
+        var totalRounds = (int)Math.Log2(totalSlots);
+
+        // Final turuysa → turnuva bitti
+        if (currentRound == totalRounds)
+        {
+            run.WinnerItemId = match.WinnerItemId;
+            run.FinishedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+            return RedirectToAction(nameof(BracketResult), new { runId });
+        }
+
+        // Bu turdaki tüm maçlar tamamlandı mı?
+        var unfinishedInRound = await _db.BracketMatches
+            .CountAsync(m => m.RunId == runId && m.Round == currentRound && m.WinnerItemId == null);
+
+        if (unfinishedInRound == 0)
+        {
+            // ✅ Tur bitti! Kazananları topla ve RASTGELE karıştırarak sonraki tura yerleştir
+            await ShuffleWinnersToNextRoundAsync(run, currentRound);
+            await _db.SaveChangesAsync();
+        }
 
         if (run.FinishedAt != null || run.WinnerItemId != null)
             return RedirectToAction(nameof(BracketResult), new { runId });
@@ -742,6 +766,7 @@ public class PlayController : Controller
             }
         }
 
+        // ✅ Sadece 1. tur item'larını yerleştir (rastgele seçildi zaten)
         for (int i = 0; i < totalSlots / 2; i++)
         {
             var match = matches.First(x => x.Round == 1 && x.MatchNumber == (i + 1));
@@ -749,35 +774,53 @@ public class PlayController : Controller
             match.RightItemId = picked[i * 2 + 1];
         }
 
+        // ✅ 2. tur ve sonrası BOŞ kalacak, tur bitince ShuffleWinnersToNextRoundAsync dolduracak
+
         _db.BracketMatches.AddRange(matches);
         await _db.SaveChangesAsync();
     }
 
-    private async Task PlaceWinnerToNextMatchAsync(Run run, BracketMatch match)
+    /// <summary>
+    /// ✅ YENİ: Bir tur tamamen bittiğinde, o turun kazananlarını RASTGELE karıştırıp
+    /// sonraki turun maçlarına yerleştirir. Böylece 2. tur ve sonrasında eşleşmeler
+    /// her zaman rastgele olur (Quizei tarzı).
+    /// </summary>
+    private async Task ShuffleWinnersToNextRoundAsync(Run run, int completedRound)
     {
         var totalSlots = run.TotalSlots ?? 0;
         var totalRounds = (int)Math.Log2(totalSlots);
 
-        if (match.Round == totalRounds)
-        {
-            run.WinnerItemId = match.WinnerItemId;
-            run.FinishedAt = DateTime.UtcNow;
+        // Final turuysa shuffle'a gerek yok
+        if (completedRound >= totalRounds)
             return;
+
+        // Bu turun tamamlanmış maçlarından kazananları topla
+        var completedMatches = await _db.BracketMatches
+            .Where(m => m.RunId == run.Id && m.Round == completedRound && m.WinnerItemId != null)
+            .OrderBy(m => m.MatchNumber)
+            .ToListAsync();
+
+        var winnerIds = completedMatches
+            .Select(m => m.WinnerItemId!.Value)
+            .ToList();
+
+        // ✅ Kazananları RASTGELE karıştır
+        var rng = new Random();
+        winnerIds = winnerIds.OrderBy(_ => rng.Next()).ToList();
+
+        // Sonraki turun maçlarını al
+        var nextRound = completedRound + 1;
+        var nextMatches = await _db.BracketMatches
+            .Where(m => m.RunId == run.Id && m.Round == nextRound)
+            .OrderBy(m => m.MatchNumber)
+            .ToListAsync();
+
+        // Karıştırılmış kazananları ikişer ikişer sonraki tur maçlarına yerleştir
+        for (int i = 0; i < nextMatches.Count; i++)
+        {
+            nextMatches[i].LeftItemId = winnerIds[i * 2];
+            nextMatches[i].RightItemId = winnerIds[i * 2 + 1];
         }
-
-        var nextRound = match.Round + 1;
-        var nextMatchNumber = (match.MatchNumber + 1) / 2;
-
-        var nextMatch = await _db.BracketMatches
-            .FirstOrDefaultAsync(m => m.RunId == run.Id && m.Round == nextRound && m.MatchNumber == nextMatchNumber);
-
-        if (nextMatch == null)
-            throw new Exception("Next match bulunamadı.");
-
-        if (match.MatchNumber % 2 == 1)
-            nextMatch.LeftItemId = match.WinnerItemId;
-        else
-            nextMatch.RightItemId = match.WinnerItemId;
     }
 
     private static string GetRoundName(int round, int totalRounds)

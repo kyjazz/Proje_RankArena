@@ -4,10 +4,113 @@
     var userNames = ViewBag.UserNames as Dictionary<string, string> ?? new Dictionary<string, string>();
 }
 
+<style>
+    .admin-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: rgba(16, 19, 30, 0.75);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+        .admin-table thead th {
+            background: rgba(20, 23, 35, 0.95);
+            color: #ffb020;
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 14px 16px;
+            border-bottom: 2px solid rgba(255,176,32,0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .admin-table tbody tr {
+            transition: background 0.15s ease;
+        }
+
+            .admin-table tbody tr:hover {
+                background: rgba(255,255,255,0.04);
+            }
+
+        .admin-table td {
+            padding: 14px 16px;
+            color: #e9ecff;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            vertical-align: middle;
+        }
+
+    .admin-page-title {
+        color: #e9ecff;
+        font-weight: 800;
+    }
+
+    .admin-page-subtitle {
+        color: rgba(233,236,255,0.55);
+        font-size: 0.9rem;
+    }
+
+    .badge-soft {
+        background: rgba(255,176,32,0.15);
+        color: #ffb020;
+        border: 1px solid rgba(255,176,32,0.3);
+        font-weight: 700;
+    }
+
+    /* Badge'lerdeki text-dark sorununu çöz */
+    .badge-type-danger {
+        background: rgba(255,45,85,0.2);
+        color: #ff6b6b;
+        border: 1px solid rgba(255,45,85,0.3);
+    }
+
+    .badge-type-warning {
+        background: rgba(255,176,32,0.2);
+        color: #ffd37a;
+        border: 1px solid rgba(255,176,32,0.3);
+    }
+
+    .badge-type-dark {
+        background: rgba(255,255,255,0.08);
+        color: rgba(233,236,255,0.7);
+        border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .badge-type-info {
+        background: rgba(56,189,248,0.2);
+        color: #7dd3fc;
+        border: 1px solid rgba(56,189,248,0.3);
+    }
+
+    .badge-status-success {
+        background: rgba(34,197,94,0.2);
+        color: #86efac;
+        border: 1px solid rgba(34,197,94,0.3);
+    }
+
+    .badge-status-secondary {
+        background: rgba(148,163,184,0.2);
+        color: #cbd5e1;
+        border: 1px solid rgba(148,163,184,0.3);
+    }
+
+    .badge-tournament {
+        background: rgba(255,255,255,0.08);
+        color: #e9ecff;
+        border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .admin-date {
+        color: rgba(233,236,255,0.55);
+        font-size: 0.82rem;
+    }
+</style>
+
 <div class="d-flex align-items-center justify-content-between mb-3">
     <div>
-        <h2 class="mb-1 fw-bold">📩 Gönderilen Mesajlar</h2>
-        <div class="muted">Admin olarak kullanıcılara gönderdiğiniz tüm mesajlar.</div>
+        <h2 class="mb-1 admin-page-title">📩 Gönderilen Mesajlar</h2>
+        <div class="admin-page-subtitle">Admin olarak kullanıcılara gönderdiğiniz tüm mesajlar.</div>
     </div>
     <span class="badge badge-soft px-3 py-2">Toplam: @Model.Count</span>
 </div>
@@ -25,14 +128,14 @@
     @if (!Model.Any())
     {
         <div class="text-center py-5">
-            <div class="fs-4 fw-semibold">Henüz mesaj gönderilmemiş.</div>
-            <div class="muted mt-2">Turnuva yönetimi sırasında kullanıcılara mesaj gönderebilirsiniz.</div>
+            <div class="fs-4 fw-semibold" style="color:#e9ecff;">Henüz mesaj gönderilmemiş.</div>
+            <div class="admin-page-subtitle mt-2">Turnuva yönetimi sırasında kullanıcılara mesaj gönderebilirsiniz.</div>
         </div>
     }
     else
     {
         <div class="table-responsive">
-            <table class="table table-darkish table-striped table-hover align-middle mb-0">
+            <table class="admin-table align-middle mb-0">
                 <thead>
                     <tr>
                         <th>Alıcı</th>
@@ -52,29 +155,29 @@
 
                         <tr>
                             <td>
-                                <span class="fw-bold">@userName</span>
+                                <span class="fw-bold" style="color:#e9ecff;">@userName</span>
                             </td>
 
                             <td>
                                 @switch (m.MessageType)
                                 {
                                     case RankArena.Models.Entities.AdminMessageType.TurnuvaReddedildi:
-                                        <span class="badge bg-danger">Reddedildi</span>
+                                        <span class="badge badge-type-danger">Reddedildi</span>
                                         break;
                                     case RankArena.Models.Entities.AdminMessageType.TurnuvaYayindanKaldirildi:
-                                        <span class="badge bg-warning text-dark">Yayından Kaldırıldı</span>
+                                        <span class="badge badge-type-warning">Yayından Kaldırıldı</span>
                                         break;
                                     case RankArena.Models.Entities.AdminMessageType.TurnuvaSilindi:
-                                        <span class="badge bg-dark">Silindi</span>
+                                        <span class="badge badge-type-dark">Silindi</span>
                                         break;
                                     case RankArena.Models.Entities.AdminMessageType.GenelBilgilendirme:
-                                        <span class="badge bg-info text-dark">Bilgilendirme</span>
+                                        <span class="badge badge-type-info">Bilgilendirme</span>
                                         break;
                                 }
                             </td>
 
                             <td>
-                                <div class="fw-semibold" style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                <div class="fw-semibold" style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#e9ecff;">
                                     @m.Subject
                                 </div>
                             </td>
@@ -82,27 +185,27 @@
                             <td>
                                 @if (m.Tournament != null)
                                 {
-                                    <span class="badge bg-dark border">@m.Tournament.Title</span>
+                                    <span class="badge badge-tournament">@m.Tournament.Title</span>
                                 }
                                 else
                                 {
-                                    <span class="muted">—</span>
+                                    <span style="color:rgba(233,236,255,0.45);">—</span>
                                 }
                             </td>
 
                             <td>
                                 @if (m.IsRead)
                                 {
-                                    <span class="badge bg-success">Okundu</span>
+                                    <span class="badge badge-status-success">Okundu</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary">Okunmadı</span>
+                                    <span class="badge badge-status-secondary">Okunmadı</span>
                                 }
                             </td>
 
                             <td>
-                                <small class="muted">@m.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
+                                <small class="admin-date">@m.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
                             </td>
                         </tr>
                     }

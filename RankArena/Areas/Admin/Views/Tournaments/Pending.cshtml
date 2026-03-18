@@ -1,12 +1,87 @@
-﻿@model List<RankArena.Models.Entities.Tournament>
+﻿@model List<RankArena.Models.Entities.Tournament>    
 @{
     ViewData["Title"] = "Onay Bekleyen Turnuvalar";
 }
 
+<style>
+    .admin-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: rgba(16, 19, 30, 0.75);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+        .admin-table thead th {
+            background: rgba(20, 23, 35, 0.95);
+            color: #ffb020;
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 14px 16px;
+            border-bottom: 2px solid rgba(255,176,32,0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .admin-table tbody tr {
+            transition: background 0.15s ease;
+        }
+
+            .admin-table tbody tr:hover {
+                background: rgba(255,255,255,0.04);
+            }
+
+        .admin-table td {
+            padding: 14px 16px;
+            color: #e9ecff;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            vertical-align: middle;
+        }
+
+    .admin-title {
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+
+    .admin-slug {
+        color: rgba(233,236,255,0.45);
+        font-size: 0.72rem;
+    }
+
+    .admin-date {
+        color: rgba(233,236,255,0.55);
+        font-size: 0.82rem;
+    }
+
+    .admin-muted {
+        color: rgba(233,236,255,0.55);
+    }
+
+    .admin-page-title {
+        color: #e9ecff;
+        font-weight: 800;
+    }
+
+    .admin-page-subtitle {
+        color: rgba(233,236,255,0.55);
+        font-size: 0.9rem;
+    }
+
+    .badge-soft {
+        background: rgba(255,176,32,0.15);
+        color: #ffb020;
+        border: 1px solid rgba(255,176,32,0.3);
+        font-weight: 700;
+    }
+</style>
+
 <div class="d-flex align-items-center justify-content-between mb-3">
     <div>
-        <h2 class="mb-1 fw-bold">Onay Bekleyen Turnuvalar</h2>
-        <div class="muted">Admin panelinden yayın akışını yönet.</div>
+        <h2 class="mb-1 admin-page-title">Onay Bekleyen Turnuvalar</h2>
+        <div class="admin-page-subtitle">Admin panelinden yayın akışını yönet.</div>
     </div>
 
     <div class="d-flex gap-2">
@@ -35,14 +110,14 @@
     @if (!Model.Any())
     {
         <div class="text-center py-5">
-            <div class="fs-4 fw-semibold">Şu an onay bekleyen turnuva yok ✅</div>
-            <div class="muted mt-2">Yeni turnuva oluşturulunca burada görünecek.</div>
+            <div class="fs-4 fw-semibold" style="color:#e9ecff;">Şu an onay bekleyen turnuva yok ✅</div>
+            <div class="admin-muted mt-2">Yeni turnuva oluşturulunca burada görünecek.</div>
         </div>
     }
     else
     {
         <div class="table-responsive">
-            <table class="table table-darkish table-striped table-hover align-middle mb-0">
+            <table class="admin-table align-middle mb-0">
                 <thead>
                     <tr>
                         <th style="width:35%;">Başlık</th>
@@ -55,8 +130,8 @@
                     {
                         <tr>
                             <td>
-                                <div class="fw-bold" style="color:#e9ecff;">@t.Title</div>
-                                <div class="muted" style="font-size:12px;">
+                                <div class="admin-title">@t.Title</div>
+                                <div class="admin-date">
                                     Oluşturma: @t.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
                                 </div>
                                 @{
@@ -71,7 +146,7 @@
                             </td>
 
                             <td>
-                                <span class="badge bg-dark border">@t.Slug</span>
+                                <span class="badge" style="background:rgba(255,255,255,0.08); color:#e9ecff; border:1px solid rgba(255,255,255,0.15);">@t.Slug</span>
                             </td>
 
                             <td class="d-flex gap-2 flex-wrap">
